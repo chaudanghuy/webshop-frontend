@@ -30,7 +30,7 @@ import apiRequest from '../../lib/apiRequest';
 import DropdownSearch from '../../components/dropdownSearch/DropdownSearch';
 import Toggle from 'react-toggle';
 import "react-toggle/style.css";
-import Sku from '../../components/template/SKU';
+import Sku from '../../components/template/Sku';
 import { IdentifierCode } from '../../utils/enums/product';
 
 const AddTemplate = () => {
