@@ -1,0 +1,32 @@
+.dropdown-search {
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.dropdown-input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.dropdown-list {
+    margin: 0;
+    padding: 10px;
+    list-style: none;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    position: absolute;
+    width: 100%;
+    background-color: white;
+    z-index: 1;
+}
+
+.dropdown-list li {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.dropdown-list li.selected {
+    background-color: #f0f0f0;
+}
