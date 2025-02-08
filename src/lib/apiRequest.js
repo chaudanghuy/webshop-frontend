@@ -1,7 +1,9 @@
 import axios from "axios";
 
+console.log(import.meta.env.VITE_PROCESS_API);
+
 const apiRequest = axios.create({
-  baseURL: "https://webshop-backend-8c5o.onrender.com/api",
+  baseURL: import.meta.env.VITE_PROCESS_API,
   withCredentials: true,
 });
 
