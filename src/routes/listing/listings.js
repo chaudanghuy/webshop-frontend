@@ -474,7 +474,7 @@ const Listings = () => {
                                 </CTableHead>
                                 <CTableBody>
                                     {listings.map((item, index) => (
-                                        <CTableRow v-for="item in tableItems" key={index} color={filter && filter.asin.includes(item.sku) ? 'danger' : ''}>
+                                        <CTableRow v-for="item in tableItems" key={index} color={filter && filter.asin && filter.asin.includes(item.sku) ? 'danger' : ''}>
                                             <CTableDataCell>
                                                 <CFormCheck
                                                     className="form-check-input"
@@ -503,9 +503,9 @@ const Listings = () => {
                                                     los.listingId === item.id ? (
                                                         <>
                                                             <div key={los.id} className="d-flex flex-row justify-content-between ">
-                                                                <div class="p-2">{los.shop.name}</div>
-                                                                <div class="p-2">{format(los.createdAt)}</div>
-                                                                <div class="p-2">
+                                                                <div className="p-2">{los.shop.name}</div>
+                                                                <div className="p-2">{format(los.createdAt)}</div>
+                                                                <div className="p-2">
                                                                     {los.status === 'FAILURE' ?
                                                                         <>
                                                                             <CBadge color='danger'>{los.status}</CBadge>

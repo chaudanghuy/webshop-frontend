@@ -13,22 +13,26 @@ import {
     CFormText,
     CFormTextarea,
     CImage,
-    CInputGroup,
-    CInputGroupText,
     CRow,
+    CToast,
+    CToastBody,
+    CToastHeader,
 } from '@coreui/react'
-import { DocsComponents, DocsExample } from 'src/components'
-import ReactQuill from 'react-quill';
+import {
+    BellRing
+} from 'lucide-react'
 import 'react-quill/dist/quill.snow.css';
 import CIcon from '@coreui/icons-react';
 import { cilArrowLeft, cilCloudDownload, cilCloudy, cilCopy, cilInputPower } from '@coreui/icons';
 import { useNavigate } from 'react-router-dom';
 import apiRequest from '../../lib/apiRequest';
+import { ToastNoti } from '../../components/notification/ToastNoti';
 
 const Tool = () => {
     const navigate = useNavigate();
     const [accessToken, setAccessToken] = useState('');
     const [message, setMessage] = useState('');
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         const fetchSetting = async () => {
@@ -73,8 +77,39 @@ const Tool = () => {
         }, 2000);
     }
 
+    const downloadExtension = async () => {
+        const downloadURL = "https://drive.google.com/file/d/1KUozbhWQFvqdk7JUyAsRI6QehMQBOT9x/view?usp=sharing";
+        try {
+            handleShowToast("Tiến hành tải..");
+            const response = await fetch(downloadURL);
+            const blob = await response.blob();
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'amazon_crawl.zip';
+            document.body.appendChild(link);
+            link.click();
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const handleShowToast = (message) => {
+        setToast(
+            <CToast>
+                <CToastHeader closeButton>
+                    <BellRing className="me-2" />
+                    <div className="fw-bold me-auto">Thông báo hệ thống</div>
+                    <small>Just now</small>
+                </CToastHeader>
+                <CToastBody>{message}</CToastBody>
+            </CToast>
+        )
+    }
+
     return (
         <>
+            <ToastNoti toast={toast} setToast={setToast} />
             <CRow>
                 <CCol xs={12}>
                     <CCard>
@@ -84,7 +119,7 @@ const Tool = () => {
                             </strong>
                         </CCardHeader>
                         <CCardBody>
-                            <CButton className='mb-2' color="warning" onClick={redirect}>
+                            <CButton className='mb-2' color="warning" onClick={downloadExtension}>
                                 <CIcon icon={cilCloudDownload} className="me-1" /> Tải tiện ích
                             </CButton>
                             <CButton className='float-end' color="primary" onClick={copyToClipboard}>
@@ -110,6 +145,10 @@ const Tool = () => {
                                 <CFormText className="text-muted" style={{ textAlign: 'center' }} >
                                     {message}
                                 </CFormText>
+                                <CRow className='d-flex justify-content-center mt-2'>
+                                    <CFormLabel>Xem cách hướng dẫn thêm extension trong Chrome:</CFormLabel>
+                                    <CImage src="https://img.hoangweb.com/2014/08/install-external-chrome-extension1.png" width={600} height={600} />
+                                </CRow>
                             </CForm>
                         </CCardBody>
                     </CCard>

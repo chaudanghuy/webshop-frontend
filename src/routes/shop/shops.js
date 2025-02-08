@@ -81,6 +81,9 @@ import {
     cilBell,
 
 } from '@coreui/icons'
+import {
+    BellRing
+} from 'lucide-react'
 
 import apiRequest from '../../lib/apiRequest'
 import MultiSelect from 'multiselect-react-dropdown';
@@ -91,6 +94,7 @@ import DefaultShopModal from './defaultShopModal'
 import ToggleShopModal from './toggleShopStatus'
 import AssignToModal from './assignTo'
 import { ToastNoti } from "../../components/notification/ToastNoti";
+import { format } from 'timeago.js'
 
 
 const Shops = () => {
@@ -304,7 +308,7 @@ const Shops = () => {
         setToast(
             <CToast>
                 <CToastHeader closeButton>
-                    <CIcon icon={cilBell} className="me-2" />
+                    <BellRing className="me-2" />
                     <div className="fw-bold me-auto">Thông báo hệ thống</div>
                     <small>Just now</small>
                 </CToastHeader>
@@ -416,6 +420,9 @@ const Shops = () => {
                                             Code
                                         </CTableHeaderCell>
                                         <CTableHeaderCell className="bg-body-tertiary text-center">
+                                            Ngày tạo
+                                        </CTableHeaderCell>
+                                        <CTableHeaderCell className="bg-body-tertiary text-center">
                                             Trạng thái
                                         </CTableHeaderCell>
                                         <CTableHeaderCell className="bg-body-tertiary text-center">Chức năng</CTableHeaderCell>
@@ -439,6 +446,9 @@ const Shops = () => {
                                             </CTableDataCell>
                                             <CTableDataCell className="text-center">
                                                 <code>{shop.code}</code>
+                                            </CTableDataCell>
+                                            <CTableDataCell className='text-center'>
+                                                <div>{format(shop.createdAt)}</div>
                                             </CTableDataCell>
                                             <CTableDataCell className="text-center">
                                                 {shop.status === "authorized" || shop.status === "CONNECTED" ? (
