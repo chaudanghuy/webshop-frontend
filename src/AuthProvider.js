@@ -25,16 +25,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    const checkToken = async () => {
-      const isValid = await validateToken();
-      if (!isValid) {
-        localStorage.removeItem("user");        
-      }
-    };
+  // useEffect(() => {
+  //   const checkToken = async () => {
+  //     const isValid = await validateToken();
+  //     if (!isValid) {
+  //       localStorage.removeItem("user");        
+  //     }
+  //   };
     
-    checkToken();    
-  }, []);
+  //   checkToken();    
+  // }, []);
 
   const login = (data) => {
     localStorage.setItem("user", JSON.stringify(data));
