@@ -120,9 +120,10 @@ const Products = () => {
     const products = filteredProducts
       .filter((product) => product.title.toLowerCase().includes(filterText.toLowerCase()))
       .filter((product) => (filterStatus.length > 0 ? filterStatus.includes(product.status) : true))
+      .filter((product) => (filterShop.length > 0 ? filterShop.includes(product.shopId) : true))
       .sort((a, b) => (sortBy === 'dateCreated' ? b.create_time - a.create_time : a.id - b.id))
     setFilteredProducts(products)
-  }, [filterText, filterStatus, sortBy])
+  }, [filterText, filterStatus, filterShop, sortBy])
 
   useEffect(() => {
     setLoading(true)
@@ -276,7 +277,7 @@ const Products = () => {
     }
     let selectedShops = []
     for (const item of selectedList) {
-      selectedShops.push(item.name)
+      selectedShops.push(item.id)
     }
     setFilterShop(selectedShops)
   }
