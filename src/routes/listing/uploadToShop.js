@@ -219,7 +219,7 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
             try {
                 if (!selectedTemplate) return;
                 const findTpl = await apiRequest.get(`/templates/${selectedTemplate}`);
-                console.log(findTpl);
+                // console.log(findTpl);
                 setStep2Template(findTpl.data);
             } catch (error) {
                 console.log(error);
@@ -456,7 +456,7 @@ const UploadCertModal = ({ visible, setVisible, listingCert }) => {
                 listingId: listingCert.id,
                 imageUri: certImages[0]
             });
-            console.log(response);
+            // console.log(response);
             handleShowToast('Upload certificate thanh cong!');
             setVisible(false);
         } catch (error) {

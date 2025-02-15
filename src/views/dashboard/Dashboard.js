@@ -1,5 +1,4 @@
-import React from 'react'
-import classNames from 'classnames'
+import React, { useEffect, useState } from 'react'
 
 import {
   CAvatar,
@@ -10,6 +9,10 @@ import {
   CCardFooter,
   CCardHeader,
   CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
   CProgress,
   CRow,
   CTable,
@@ -43,22 +46,17 @@ import {
   cilUserFemale,
 } from '@coreui/icons'
 
-import avatar1 from 'src/assets/images/avatars/1.jpg'
-import avatar2 from 'src/assets/images/avatars/2.jpg'
-import avatar3 from 'src/assets/images/avatars/3.jpg'
-import avatar4 from 'src/assets/images/avatars/4.jpg'
-import avatar5 from 'src/assets/images/avatars/5.jpg'
-import avatar6 from 'src/assets/images/avatars/6.jpg'
-
-import WidgetsBrand from '../widgets/WidgetsBrand'
 import WidgetsDropdown from '../widgets/WidgetsDropdown'
 import MainChart from './MainChart'
+import apiRequest from '../../lib/apiRequest'
 
 const Dashboard = () => {
-  
+
+  const [year, setYear] = useState(new Date().getFullYear());    
+
   return (
     <>
-      <WidgetsDropdown className="mb-4" />
+      <WidgetsDropdown year={year} />
       <CCard className="mb-4">
         <CCardBody>
           <CRow>
@@ -66,29 +64,36 @@ const Dashboard = () => {
               <h4 id="traffic" className="card-title mb-0">
                 Thống kê
               </h4>
-              <div className="small text-body-secondary">January - December 2024</div>
+              <div className="small text-body-secondary">January - December</div>
             </CCol>
             <CCol sm={7} className="d-none d-md-block">
               <CButton color="primary" className="float-end">
                 <CIcon icon={cilCloudDownload} />
               </CButton>
-              <CButtonGroup className="float-end me-3">
-                {['Day', 'Month', 'Year'].map((value) => (
-                  <CButton
-                    color="outline-secondary"
-                    key={value}
-                    className="mx-0"
-                    active={value === 'Month'}
-                  >
-                    {value}
-                  </CButton>
-                ))}
-              </CButtonGroup>
+              <CCol sm={12} lg={6} className="mb-3 mb-lg-0 text-center text-lg-end d-flex flex-row space-between">
+                <CFormLabel className="me-2 pe-2 mt-2">Năm</CFormLabel>
+                <CFormSelect                  
+                  className="text-center"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                >
+                  <option value="2021">2021</option>
+                  <option value="2022">2022</option>
+                  <option value="2023">2023</option>
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                  <option value="2027">2027</option>
+                  <option value="2028">2028</option>
+                  <option value="2029">2029</option>
+                  <option value="2030">2030</option>
+                </CFormSelect>
+              </CCol>
             </CCol>
           </CRow>
-          <MainChart />
-        </CCardBody>        
-      </CCard>      
+          <MainChart year={year} />
+        </CCardBody>
+      </CCard>
     </>
   )
 }

@@ -16,7 +16,7 @@ import CIcon from '@coreui/icons-react';
 import { cilArrowBottom, cilOptions, cilArrowTop } from '@coreui/icons';
 import apiRequest from '../../lib/apiRequest';
 
-const WidgetsDropdown = (props) => {
+const WidgetsDropdown = (year) => {
   const widgetChartRef1 = useRef(null);
   const widgetChartRef2 = useRef(null);
   const [months, setMonths] = useState([]);
@@ -24,9 +24,13 @@ const WidgetsDropdown = (props) => {
   const [revenue, setRevenue] = useState([]);
 
   useEffect(() => {
-    const fetchTotalOrders = async () => {
+    const fetchTotalOrders = async (year) => {
       try {
-        const orders = await apiRequest.get('/orders/stats');        
+        if (!year) {
+          year = new Date().getFullYear();
+        }
+        console.log(year);
+        const orders = await apiRequest.get('/orders/stats?year=' + year);        
         const tmpMonths = [];
         const tmpOrders = [];
         const tmpRevenues = [];
@@ -43,8 +47,8 @@ const WidgetsDropdown = (props) => {
       }
     };
 
-    fetchTotalOrders();
-  }, []);
+    fetchTotalOrders(year.year);
+  }, [year]);
 
   useEffect(() => {
     document.documentElement.addEventListener('ColorSchemeChange', () => {
@@ -76,7 +80,7 @@ const WidgetsDropdown = (props) => {
   const percentageChangeRevenue = calculatePercentageChange(revenue);
 
   return (
-    <CRow className={props.className} xs={{ gutter: 4 }}>
+    <CRow className="mb-4"  xs={{ gutter: 4 }}>
       <CCol sm={6} xl={4} xxl={3}>
         <CWidgetStatsA
           color="primary"

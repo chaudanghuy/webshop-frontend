@@ -74,7 +74,7 @@ const Warehouses = () => {
         setLoading(true);
         await apiRequest.get('/orders/tiktok/all-orders')
             .then((res) => {
-                console.log(res.data);
+                // console.log(res.data);
                 setOrders(res.data);
                 setNoneFilterOrders(res.data);
             });

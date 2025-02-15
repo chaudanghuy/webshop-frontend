@@ -4,25 +4,29 @@ import { CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 import apiRequest from '../../lib/apiRequest'
 
-const MainChart = () => {
+const MainChart = (year) => {
   const chartRef = useRef(null)
   const [months, setMonths] = useState([]);
   const [totalOrders, setTotalOrders] = useState([]);
   const [revenue, setRevenue] = useState([]);
 
   useEffect(() => {
-    const fetchTotalOrders = async () => {
+    const fetchTotalOrders = async (year) => {
       try {
-        const orders = await apiRequest.get('/orders/stats');        
+        console.log(year);
+        if (!year) {
+          year = new Date().getFullYear();
+        }
+        const orders = await apiRequest.get('/orders/stats?year=' + year);
         const tmpMonths = [];
         const tmpOrders = [];
         const tmpRevenues = [];
         orders.data.forEach(order => {
-          tmpMonths.push(order.month);          
+          tmpMonths.push(order.month);
           tmpOrders.push(order.total);
           tmpRevenues.push(order.revenue);
-        });        
-        setMonths(tmpMonths);        
+        });
+        setMonths(tmpMonths);
         setTotalOrders(tmpOrders);
         setRevenue(tmpRevenues);
       } catch (error) {
@@ -30,8 +34,8 @@ const MainChart = () => {
       }
     };
 
-    fetchTotalOrders();
-  }, []);
+    fetchTotalOrders(year.year);
+  }, [year]);
 
   useEffect(() => {
     document.documentElement.addEventListener('ColorSchemeChange', () => {
@@ -51,9 +55,7 @@ const MainChart = () => {
         })
       }
     })
-  }, [chartRef])
-
-  const random = () => Math.round(Math.random() * 100)
+  }, [chartRef])  
 
   return (
     <>
