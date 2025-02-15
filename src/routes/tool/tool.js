@@ -13,6 +13,7 @@ import {
   CFormText,
   CFormTextarea,
   CImage,
+  CLink,
   CRow,
   CToast,
   CToastBody,
@@ -133,12 +134,13 @@ const Tool = () => {
                   {message}
                 </CFormText>
                 <CRow className="d-flex justify-content-center mt-2">
-                  <CFormLabel>Xem cách hướng dẫn thêm extension trong Chrome:</CFormLabel>
-                  <CImage
-                    src="https://img.hoangweb.com/2014/08/install-external-chrome-extension1.png"
-                    width={600}
-                    height={600}
-                  />
+                  <CLink
+                    href="https://docs.google.com/document/d/e/2PACX-1vTi-06iSXcJ9xSCDzMeQNoIQh6udKdxm4B0KwZH-G7c3yRb4RDMLyNhSv_uV_N8Dgz4zAMl8nUFnaLm/pub"
+                    target="_blank"
+                  >
+                    <CIcon icon={cilCloudy} className="me-1" />
+                    Xem cách hướng dẫn thêm extension trong Chrome
+                  </CLink>
                 </CRow>
               </CForm>
             </CCardBody>

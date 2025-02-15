@@ -27,6 +27,7 @@ import { BellRing, Globe } from 'lucide-react'
 const AddShop = ({ visible, setVisible }) => {
   const [name, setName] = useState('')
   const [tiktokURL, setTiktokURL] = useState('')
+  const [titktokResponse, setTiktokResponse] = useState('')
   const [authCode, setAuthCode] = useState('')
   const [accessToken, setAccessToken] = useState('')
   const [refreshToken, setRefreshToken] = useState('')
@@ -38,6 +39,23 @@ const AddShop = ({ visible, setVisible }) => {
     const url = `https://auth.tiktok-shops.com/api/v2/token/get?app_key=${APP_KEY}&app_secret=${APP_SECRET}&auth_code=${authCode}&grant_type=authorized_code`
     setTiktokURL(url)
   }, [authCode])
+
+  useEffect(() => {
+    const processTiktokResponse = async () => {
+      try {
+        const data = JSON.parse(titktokResponse)
+        console.log(data)
+        if (data.code === 0 && data.message === 'success') {
+          setAccessToken(data.data.access_token)
+          setRefreshToken(data.data.refresh_token)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    processTiktokResponse()
+  }, [titktokResponse])
 
   const handleShowToast = (message) => {
     setToast(
@@ -64,7 +82,9 @@ const AddShop = ({ visible, setVisible }) => {
       if (resp) {
         handleShowToast('Tạo shop thành công')
         // Thực hiện xử lý tạo shop ở đây
-        window.location.reload()
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
       }
     } catch (error) {
       console.log(error)
@@ -72,9 +92,13 @@ const AddShop = ({ visible, setVisible }) => {
     }
   }
 
-  const processTiktokToken = async () => {
+  const copyTiktokURL = async () => {
     try {
-      window.open(tiktokURL, '_blank')
+      // Copy the text inside the text field
+      navigator.clipboard.writeText(tiktokURL)
+
+      // Alert the copied text
+      alert('Link copy!')
     } catch (error) {}
   }
 
@@ -118,11 +142,21 @@ const AddShop = ({ visible, setVisible }) => {
           </CRow>
           <CRow>
             <CCol md={12}>
-              <CButton color="primary" className="mt-3" onClick={processTiktokToken}>
+              <CButton color="primary" className="mt-3" onClick={copyTiktokURL}>
                 <Globe className="me-2" />
                 Lấy Tiktok Token
               </CButton>
             </CCol>
+          </CRow>
+          <CRow className="mt-3">
+            <CFormTextarea
+              type="text"
+              id="tiktokResponse"
+              name="tiktokResponse"
+              label="Chép tiktok response vào đây để lấy token"
+              value={titktokResponse}
+              onChange={(e) => setTiktokResponse(e.target.value)}
+            />
           </CRow>
           <CRow className="mt-3">
             <CCol md={12}>
