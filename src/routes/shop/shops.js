@@ -320,6 +320,13 @@ const Shops = () => {
     }
   }
 
+  const generateTokenTiktokUrl = (shop) => {
+    try {
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   const handleShowToast = (message) => {
     setToast(
       <CToast>
