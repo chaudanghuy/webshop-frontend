@@ -20,6 +20,7 @@ import {
   CFormTextarea,
   CImage,
   CInputGroup,
+  CLink,
   CModal,
   CModalBody,
   CModalHeader,
@@ -30,9 +31,10 @@ import {
   CToast,
   CToastBody,
   CToastHeader,
+  CTooltip,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilBell, cilCog, cilPlus, cilReload, cilX } from '@coreui/icons'
+import { cilBell, cilCog, cilPlus, cilReload, cilTrash, cilX } from '@coreui/icons'
 
 import { format } from 'timeago.js'
 import apiRequest from '../../lib/apiRequest'
@@ -40,12 +42,20 @@ import MultiSelect from 'multiselect-react-dropdown'
 import { ToastNoti } from '../../components/notification/ToastNoti'
 
 import DataTable from 'react-data-table-component'
-import { Eye, Edit, Trash2, Hand, Zap, CirclePercent } from 'lucide-react'
+import { Eye, Edit, Trash2, Hand, Zap, CirclePercent, CircleHelp, X, Plus } from 'lucide-react'
 import UploadWidget from '../../components/uploadWidget/UploadWidget'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import DeleteProduct from './deleteProduct'
 import './updatePrice.css'
+
+// Enum
+import { PromoHelp } from '../../utils/enums/promo'
+import { PromoPriceList } from '../../utils/constant/promoPriceList'
+
+const customTooltipStyle = {
+  '--cui-tooltip-bg': 'var(--cui-primary)',
+}
 
 const Products = () => {
   // Shops
@@ -86,13 +96,17 @@ const Products = () => {
   // Flash Deal
   const [isFlashDeal, setIsFlashDeal] = useState(false)
   const [visibleFlashDeal, setVisibleFlashDeal] = useState(false)
-  const [dealTitle, setDealTitle] = useState(new Date().toLocaleString())
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchShop, setSearchShop] = useState('')
+  const [dealTitle, setDealTitle] = useState('Promo ' + new Date().toLocaleString())
   const [dealDiscount, setDealDiscount] = useState(10)
   const [dealQtyLimit, setDealQtyLimit] = useState(-1)
   const [dealQtyPerUser, setDealQtyPerUser] = useState(-1)
   const [dealStartTime, setDealStartTime] = useState('')
   const [dealEndTime, setDealEndTime] = useState('')
   const [updatingFlashDeal, setUpdatingFlashDeal] = useState(false)
+  const [discountType, setDiscountType] = useState('ALL')
+  const [discountPriceList, setDiscountPriceList] = useState([])
 
   const [alert, setAlert] = useState('')
 
@@ -117,13 +131,46 @@ const Products = () => {
   }
 
   useEffect(() => {
+    console.log(searchShop)
     const products = filteredProducts
       .filter((product) => product.title.toLowerCase().includes(filterText.toLowerCase()))
       .filter((product) => (filterStatus.length > 0 ? filterStatus.includes(product.status) : true))
       .filter((product) => (filterShop.length > 0 ? filterShop.includes(product.shopId) : true))
+      .filter((product) => product.title.includes(searchTerm))
+      .filter((product) => product.shopId.includes(searchShop))
       .sort((a, b) => (sortBy === 'dateCreated' ? b.create_time - a.create_time : a.id - b.id))
+
     setFilteredProducts(products)
-  }, [filterText, filterStatus, filterShop, sortBy])
+
+    // Flash deal
+    if (dealStartTime) {
+      // set end date to start date + 23 hours
+      const endDate = new Date(dealStartTime)
+      endDate.setHours(endDate.getHours() + 23)
+
+      // Format to 'YYYY-MM-DDTHH:mm'
+      const formatDateTimeLocal = (date) => {
+        const pad = (num) => String(num).padStart(2, '0')
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+      }
+      setDealEndTime(formatDateTimeLocal(endDate))
+    }
+
+    if (discountType == 'PRICE') {
+      setDiscountPriceList(PromoPriceList.PRICE)
+    } else {
+      setDiscountPriceList([])
+    }
+  }, [
+    filterText,
+    filterStatus,
+    filterShop,
+    sortBy,
+    dealStartTime,
+    discountType,
+    searchTerm,
+    searchShop,
+  ])
 
   useEffect(() => {
     setLoading(true)
@@ -150,11 +197,6 @@ const Products = () => {
       }
     }
 
-    fetchProducts()
-    fetchShops()
-  }, [])
-
-  useEffect(() => {
     const getDefaultShop = async () => {
       try {
         const defaultShop = await apiRequest.post('/users/getDefaultShop')
@@ -176,6 +218,8 @@ const Products = () => {
       }
     }
 
+    fetchProducts()
+    fetchShops()
     getDefaultShop()
   }, [])
 
@@ -321,8 +365,6 @@ const Products = () => {
   }
 
   const addFlashDeal = async () => {
-    setUpdatingFlashDeal(true)
-    setProgress(0)
     try {
       let skus = []
       filteredProducts.forEach((pd) => {
@@ -334,18 +376,49 @@ const Products = () => {
         }
       })
 
-      console.log(skus, dealDiscount, dealQtyLimit, dealQtyPerUser, dealStartTime, dealEndTime)
+      if (skus.length == 0) {
+        handleShowToast('Vui lòng chọn sản phẩm!')
+        return
+      }
+      if (!dealStartTime || !dealEndTime) {
+        handleShowToast('Vui lòng nhập thời gian!')
+        return
+      }
 
-      const resp = await apiRequest.post('/deals', {
-        skus: skus,
-        title: dealTitle,
-        discount: dealDiscount,
-        qtyLimit: dealQtyLimit,
-        qtyPerUser: dealQtyPerUser,
-        startTime: dealStartTime,
-        endTime: dealEndTime,
+      setProgress(0)
+      setUpdatingFlashDeal(true)
+
+      let payload = {}
+      if (discountType == 'ALL') {
+        payload = {
+          skus: skus,
+          title: dealTitle,
+          discount: dealDiscount,
+          qtyLimit: dealQtyLimit,
+          qtyPerUser: dealQtyPerUser,
+          startTime: dealStartTime,
+          endTime: dealEndTime,
+        }
+      } else {
+        payload = {
+          skus: skus,
+          title: dealTitle,
+          discount: discountPriceList,
+          qtyLimit: dealQtyLimit,
+          qtyPerUser: dealQtyPerUser,
+          startTime: dealStartTime,
+          endTime: dealEndTime,
+        }
+      }
+
+      console.log(payload)
+
+      const resp = await apiRequest.post('/deals', payload).then((res) => {
+        const activities = res.data.activities
+        payload.activities = activities
+        apiRequest.post('/deals/activities', payload)
       })
-      // console.log(resp.data);
+      console.log(resp.data)
       if (resp.data) {
         handleShowToast('Flash Deal thành cong!')
       }
@@ -353,9 +426,7 @@ const Products = () => {
       let progressInterval = setInterval(() => {
         setProgress((oldProgress) => {
           if (oldProgress >= 100) {
-            clearInterval(progressInterval)
-            setUpdating(false)
-            closeModal()
+            setUpdatingFlashDeal(false)
             return 100
           }
           return oldProgress + 20
@@ -363,7 +434,30 @@ const Products = () => {
       }, 500)
     } catch (error) {
       console.log(error)
+      setUpdatingFlashDeal(false)
     }
+  }
+
+  const switchDiscountType = (type) => {
+    setDiscountType(type)
+  }
+
+  const addDiscountPrice2List = () => {
+    discountPriceList.push({
+      price: '',
+      discount: '',
+    })
+    setDiscountPriceList([...discountPriceList])
+  }
+
+  const removeDiscountFromList = (index) => {
+    discountPriceList.splice(index, 1)
+    setDiscountPriceList([...discountPriceList])
+  }
+
+  const updateDiscountToList = (index, key, value) => {
+    discountPriceList[index][key] = value
+    setDiscountPriceList([...discountPriceList])
   }
 
   const syncProducts = async () => {
@@ -378,17 +472,17 @@ const Products = () => {
   }
 
   const columns = [
-    {
-      name: <CFormCheck checked={selectAll} onChange={toggleSelectAll} />,
-      cell: (row) => (
-        <CFormCheck
-          checked={selectedRows.includes(row.id)}
-          onChange={() => toggleRowSelection(row.id)}
-        />
-      ),
-      grow: 0.2,
-      width: '50px',
-    },
+    // {
+    //   name: <CFormCheck checked={selectAll} onChange={toggleSelectAll} />,
+    //   cell: (row) => (
+    //     <CFormCheck
+    //       checked={selectedRows.includes(row.id)}
+    //       onChange={() => toggleRowSelection(row.id)}
+    //     />
+    //   ),
+    //   grow: 0.2,
+    //   width: '50px',
+    // },
     { name: 'Title', selector: (row) => row.title, sortable: true, width: '250px' },
     { name: 'Shop', selector: (row) => row.shop.name, sortable: true, width: '200px' },
     {
@@ -434,6 +528,17 @@ const Products = () => {
   ]
 
   const tableColumns = [
+    {
+      name: <CFormCheck checked={selectAll} onChange={toggleSelectAll} />,
+      cell: (row) => (
+        <CFormCheck
+          checked={selectedRows.includes(row.id)}
+          onChange={() => toggleRowSelection(row.id)}
+        />
+      ),
+      grow: 0.2,
+      width: '50px',
+    },
     { name: 'Title', selector: (row) => row.title, sortable: true, width: '250px' },
     { name: 'Shop', selector: (row) => row.shop.name, sortable: true, width: '200px' },
     {
@@ -532,7 +637,7 @@ const Products = () => {
         </CCol>
         <CCol>
           <CButton
-            disabled={selectedRows.length === 0}
+            // disabled={selectedRows.length === 0}
             color="warning"
             className="float-end"
             onClick={() => callUpdatePrice()}
@@ -542,7 +647,7 @@ const Products = () => {
         </CCol>
         <CCol>
           <CButton
-            disabled={selectedRows.length === 0}
+            // disabled={selectedRows.length === 0}
             color="primary"
             className="float-start"
             onClick={() => callFlashDeal()}
@@ -674,69 +779,220 @@ const Products = () => {
                       placeholder=""
                       value={dealTitle}
                       onChange={(e) => setDealTitle(e.target.value)}
-                      label="Title"
+                      label="Tên chiến dịch promo"
                     />
                   </CRow>
-                  <CRow className="mt-3">
-                    <CFormInput
-                      type="text"
-                      className="col-4 ms-2"
-                      placeholder=""
-                      value={dealDiscount}
-                      onChange={(e) => setDealDiscount(e.target.value)}
-                      label="Discount (%)"
-                    />
+                  <CRow>
+                    <CInputGroup className="mt-3 d-flex ms-auto">
+                      <CFormCheck
+                        type="radio"
+                        name="discountType"
+                        id="discountAll"
+                        label="Tất cả"
+                        className="me-3"
+                        value="ALL"
+                        checked={discountType === 'ALL'}
+                        onChange={(e) => setDiscountType(e.target.value)}
+                      />
+                      <CFormCheck
+                        type="radio"
+                        name="discountType"
+                        id="discountPrice"
+                        label="Theo giá"
+                        className="me-3"
+                        value="PRICE"
+                        checked={discountType === 'PRICE'}
+                        onChange={(e) => setDiscountType(e.target.value)}
+                      />
+                    </CInputGroup>
                   </CRow>
+                  {discountPriceList.length > 0 ? (
+                    <CRow className="mt-3">
+                      <CFormLabel>
+                        Giá trị giảm giá (%)
+                        <CTooltip
+                          content={PromoHelp.DISCOUNT}
+                          placement="top"
+                          style={customTooltipStyle}
+                        >
+                          <CircleHelp className="ms-1" />
+                        </CTooltip>
+                      </CFormLabel>
+                      {discountPriceList.map((item, index) => (
+                        <CRow>
+                          <CCol>
+                            <CFormInput
+                              key={index}
+                              type="text"
+                              className="col-4 ms-2"
+                              placeholder=""
+                              value={item.price}
+                              label="Giá"
+                              onChange={(e) => {
+                                updateDiscountToList(index, 'price', e.target.value)
+                              }}
+                            />
+                          </CCol>
+                          <CCol>
+                            <CFormInput
+                              key={index}
+                              type="text"
+                              className="col-4 ms-2"
+                              placeholder=""
+                              value={item.percent}
+                              label="Giá trị (%)"
+                              onChange={(e) => {
+                                updateDiscountToList(index, 'percent', e.target.value)
+                              }}
+                            />
+                          </CCol>
+                          <CCol>
+                            <CInputGroup className="mt-4 d-flex ms-auto">
+                              <CLink
+                                className="float-end"
+                                onClick={() => removeDiscountFromList(index)}
+                              >
+                                <X className="me-1" />
+                              </CLink>
+                            </CInputGroup>
+                          </CCol>
+                        </CRow>
+                      ))}
+                      <CInputGroup className="mt-4 d-flex ms-auto">
+                        <CButton
+                          color="primary"
+                          className="float-end"
+                          onClick={addDiscountPrice2List}
+                        >
+                          <Plus className="me-1" /> Thêm giá
+                        </CButton>
+                      </CInputGroup>
+                    </CRow>
+                  ) : (
+                    <CRow className="mt-3">
+                      <CFormLabel>
+                        Giá trị giảm giá (%)
+                        <CTooltip
+                          content={PromoHelp.DISCOUNT}
+                          placement="top"
+                          style={customTooltipStyle}
+                        >
+                          <CircleHelp className="ms-1" />
+                        </CTooltip>
+                      </CFormLabel>
+                      <CFormInput
+                        type="text"
+                        className="col-4 ms-2"
+                        placeholder=""
+                        value={dealDiscount}
+                        onChange={(e) => setDealDiscount(e.target.value)}
+                      />
+                    </CRow>
+                  )}
                   <CRow className="mt-3">
+                    <CFormLabel>
+                      Số lượng sản phẩm
+                      <CTooltip
+                        content={PromoHelp.QUANTITY_LIMIT}
+                        placement="top"
+                        style={customTooltipStyle}
+                      >
+                        <CircleHelp className="ms-1" />
+                      </CTooltip>
+                    </CFormLabel>
                     <CFormInput
                       type="text"
                       className="col-4 ms-2"
                       placeholder=""
                       value={dealQtyLimit}
                       onChange={(e) => setDealQtyLimit(e.target.value)}
-                      label="Quantity Limit"
                     />
                   </CRow>
                   <CRow className="mt-3">
+                    <CFormLabel>
+                      Giới hạn mua sản phẩm
+                      <CTooltip
+                        content={PromoHelp.PRODUCT_LIMIT}
+                        placement="top"
+                        style={customTooltipStyle}
+                      >
+                        <CircleHelp className="ms-1" />
+                      </CTooltip>
+                    </CFormLabel>
                     <CFormInput
                       type="text"
                       className="col-4 ms-2"
                       placeholder=""
                       value={dealQtyPerUser}
                       onChange={(e) => setDealQtyPerUser(e.target.value)}
-                      label="Quantity Per User"
                     />
                   </CRow>
                   <CRow className="mt-3">
-                    <CFormLabel>Start - End</CFormLabel>
-                    <CInputGroup className="mb-3">
-                      <CFormInput
-                        type="date"
-                        placeholder="Start"
-                        aria-label="Start"
-                        aria-describedby="basic-addon2"
-                        value={dealStartTime}
-                        onChange={(e) => setDealStartTime(e.target.value)}
-                      />
-                      <CFormInput
-                        type="date"
-                        placeholder="End"
-                        aria-label="End"
-                        aria-describedby="basic-addon2"
-                        value={dealEndTime}
-                        onChange={(e) => setDealEndTime(e.target.value)}
-                      />
-                    </CInputGroup>
+                    <CFormInput
+                      type="datetime-local"
+                      placeholder="Start"
+                      aria-label="Start"
+                      aria-describedby="basic-addon2"
+                      value={dealStartTime}
+                      onChange={(e) => setDealStartTime(e.target.value)}
+                      label="Ngày hiệu lực"
+                    />
+                  </CRow>
+                  <CRow className="mt-3">
+                    <CFormLabel>
+                      Ngày kết thúc
+                      <CTooltip
+                        content={PromoHelp.DATE_END}
+                        placement="top"
+                        style={customTooltipStyle}
+                      >
+                        <CircleHelp className="ms-1" />
+                      </CTooltip>
+                    </CFormLabel>
+                    <CFormInput
+                      type="datetime-local"
+                      placeholder="End"
+                      aria-label="End"
+                      aria-describedby="basic-addon2"
+                      value={dealEndTime}
+                      onChange={(e) => setDealEndTime(e.target.value)}
+                    />
                   </CRow>
                 </div>
                 <div className="column product-list">
+                  <CRow className="header-fixed d-flex flex-row">
+                    <CCol className="d-flex" cols="6">
+                      <CFormInput
+                        type="text"
+                        className="col-4 ms-2"
+                        placeholder=""
+                        label="Search"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </CCol>
+                    <CCol className="d-flex ms-5" cols="6">
+                      <CFormSelect
+                        value={searchShop}
+                        onChange={(e) => setSearchShop(e.target.value)}
+                      >
+                        <option>Shop</option>
+                        {shops.map((shop) => (
+                          <option key={shop.id} value={shop.id}>
+                            {shop.name}
+                          </option>
+                        ))}
+                      </CFormSelect>
+                    </CCol>
+                  </CRow>
+                  <CRow className="mt-3"></CRow>
                   <div className="header-fixed d-flex justify-content-between align-items-center">
                     <h5>Products</h5>
                   </div>
                   <div className="scrollable">
                     <DataTable
                       columns={tableColumns}
-                      data={filteredProducts.filter((p) => selectedRows.includes(p.id))}
+                      data={filteredProducts}
                       noHeader
                       pagination
                       highlightOnHover

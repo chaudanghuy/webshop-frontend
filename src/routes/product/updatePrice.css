@@ -1,43 +1,42 @@
 .app {
-    text-align: center;
-    margin-top: 50px;
+  text-align: center;
+  margin-top: 50px;
 }
 
 .modal-body {
-    display: flex;
-    gap: 20px;
+  display: flex;
+  gap: 20px;
 }
 
 .column {
-    flex: 1;
+  flex: 1;
 }
 
 .input-section {
-    flex: 3;
+  flex: 3;
 }
 
-
 .product-list {
-    flex: 7;
-    max-height: 350px;
-    overflow-y: auto;
+  flex: 7;
+  max-height: 550px;
+  overflow-y: auto;
 }
 
 .header-fixed {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 1;
-    padding-bottom: 5px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+  padding-bottom: 5px;
 }
 
 .scrollable ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .scrollable li {
-    padding: 5px;
-    border-bottom: 1px solid #eee;
+  padding: 5px;
+  border-bottom: 1px solid #eee;
 }
