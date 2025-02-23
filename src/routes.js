@@ -66,13 +66,14 @@ const Proxies = React.lazy(() => import('./routes/proxy/proxies'))
 const Orders = React.lazy(() => import('./routes/order/orders'))
 const Filter = React.lazy(() => import('./routes/tool/filter'))
 const Notify = React.lazy(() => import('./routes/tool/notify'))
+const Promo = React.lazy(() => import('./routes/promo/activities'))
 
 const routes = [
-  { path: '/', exact: true, name: 'Home' },
+  { path: '/', name: 'Dashboard', element: Dashboard },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   /**
    * SHOP ROUTES
-   */  
+   */
   { path: '/users', name: 'Users', element: Users },
   { path: '/teams', name: 'Teams', element: Teams },
   { path: '/shops', name: 'Shop', element: Shops },
@@ -81,15 +82,16 @@ const routes = [
   { path: '/templates', name: 'Templates', element: Templates },
   { path: '/template/add', name: 'AddTemplate', element: AddTemplate },
   { path: '/template/edit/:id', name: 'EditTemplate', element: EditTemplate },
-  { path: '/products', name: 'Products', element: Products },  
-  { path: '/shops', name: 'Shops', element: Dashboard },  
-  { path: '/orders', name: 'Orders', element: Orders },  
-  { path: '/users', name: 'Users', element: Users },  
-  { path: '/tools', name: 'Tool', element: Tool },  
+  { path: '/products', name: 'Products', element: Products },
+  { path: '/shops', name: 'Shops', element: Dashboard },
+  { path: '/orders', name: 'Orders', element: Orders },
+  { path: '/users', name: 'Users', element: Users },
+  { path: '/tools', name: 'Tool', element: Tool },
   { path: '/proxies', name: 'Proxies', element: Proxies },
   { path: '/proxy', name: 'Proxy', element: Proxy },
   { path: '/filters', name: 'Filter', element: Filter },
   { path: '/notify', name: 'Notify', element: Notify },
+  { path: '/promo', name: 'Promo', element: Promo },
   /**
    * THEME ROUTES
    */

@@ -21,6 +21,8 @@ import {
   CImage,
   CInputGroup,
   CLink,
+  CListGroup,
+  CListGroupItem,
   CModal,
   CModalBody,
   CModalHeader,
@@ -46,30 +48,42 @@ import { Eye, Edit, Trash2, Hand, Zap, CirclePercent, CircleHelp, X, Plus } from
 import UploadWidget from '../../components/uploadWidget/UploadWidget'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import DeleteProduct from './deleteProduct'
-import './updatePrice.css'
+import DeactiveActivity from './deactiveActivity'
+import moment from 'moment'
+import './promo.css'
 
 // Enum
 import { PromoHelp } from '../../utils/enums/promo'
 import { PromoPriceList } from '../../utils/constant/promoPriceList'
+import AddActivity from './addActivity'
+import DeleteActivity from './deleteActivity'
 
 const customTooltipStyle = {
   '--cui-tooltip-bg': 'var(--cui-primary)',
 }
 
-const Products = () => {
+const Acvitites = () => {
   // Shops
   const [shops, setShops] = useState([])
 
-  // Products
+  // Product deal - for flash deal
+  const [tempProducts, setTempProducts] = useState([])
+  const [products, setProducts] = useState([])
+
+  // Acitivty Add
+  const [isAddActivity, setIsAddActivity] = useState(false)
+  const [onChangeActivity, setOnChangeActivity] = useState(0)
+
+  //  Promos
   const [total, setTotal] = useState(0)
-  const [filteredProducts, setFilteredProducts] = useState([])
+  const [activities, setActivities] = useState([])
   const [loading, setLoading] = useState(true)
 
   // Toast Noti
   const [toast, setToast] = useState(null)
 
   // Search
+  const [searchTerm, setSearchTerm] = useState('')
   const [filterText, setFilterText] = useState('')
   const [filterStatus, setFilterStatus] = useState([])
   const [filterShop, setFilterShop] = useState([])
@@ -83,30 +97,40 @@ const Products = () => {
   const [visible, setVisible] = useState(false)
 
   // Delete
-  const [product, setProduct] = useState(null)
+  const [activity, setActivity] = useState(null)
   const [visibleDelete, setVisibleDelete] = useState(false)
+  const [deleteActivityObject, setDeleteActivityObject] = useState({})
 
   // Update Price
-  const [isUpdatePrice, setIsUpdatePrice] = useState(false)
+  const [isUpdateDeal, setIsUpdateDeal] = useState(false)
   const [visibleUpdate, setVisibleUpdate] = useState(false)
   const [percentage, setPercentage] = useState('')
   const [progress, setProgress] = useState(0)
   const [updating, setUpdating] = useState(false)
 
-  // Flash Deal
+  //////////  Flash Deal ////////////////////////////////////
   const [isFlashDeal, setIsFlashDeal] = useState(false)
   const [visibleFlashDeal, setVisibleFlashDeal] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [detailFlashDeal, setDetailFlashDeal] = useState({})
+  const [dealSearchTerm, setDealSearchTerm] = useState('')
   const [searchShop, setSearchShop] = useState('')
+  /// Flash info
+  const [dealId, setDealId] = useState('')
+  const [dealProducts, setDealProducts] = useState([])
+  const [dealStatus, setDealStatus] = useState('')
+  const [dealShopId, setDealShopId] = useState('')
   const [dealTitle, setDealTitle] = useState('Promo ' + new Date().toLocaleString())
-  const [dealDiscount, setDealDiscount] = useState(10)
+  const [dealDiscount, setDealDiscount] = useState()
   const [dealQtyLimit, setDealQtyLimit] = useState(-1)
   const [dealQtyPerUser, setDealQtyPerUser] = useState(-1)
   const [dealStartTime, setDealStartTime] = useState('')
   const [dealEndTime, setDealEndTime] = useState('')
+  const [dealActivityType, setDealActivityType] = useState('')
+  const [dealProductLevel, setDealProductLevel] = useState('')
   const [updatingFlashDeal, setUpdatingFlashDeal] = useState(false)
   const [discountType, setDiscountType] = useState('ALL')
   const [discountPriceList, setDiscountPriceList] = useState([])
+  //////////// Flash Deal ////////////////////////////////////
 
   const [alert, setAlert] = useState('')
 
@@ -132,55 +156,42 @@ const Products = () => {
 
   useEffect(() => {
     console.log(searchShop)
-    const products = filteredProducts
-      .filter((product) => product.title.toLowerCase().includes(filterText.toLowerCase()))
-      .filter((product) => (filterStatus.length > 0 ? filterStatus.includes(product.status) : true))
-      .filter((product) => (filterShop.length > 0 ? filterShop.includes(product.shopId) : true))
-      .filter((product) => product.title.includes(searchTerm))
-      .filter((product) => product.shopId.includes(searchShop))
+    const filterActivities = activities
+      .filter((activity) => activity.title.toLowerCase().includes(filterText.toLowerCase()))
+      .filter((activity) => (filterShop.length > 0 ? filterShop.includes(activity.shopId) : true))
+      .filter((activity) => activity.title.includes(searchTerm))
       .sort((a, b) => (sortBy === 'dateCreated' ? b.create_time - a.create_time : a.id - b.id))
 
-    setFilteredProducts(products)
-
-    // Flash deal
-    if (dealStartTime) {
-      // set end date to start date + 23 hours
-      const endDate = new Date(dealStartTime)
-      endDate.setHours(endDate.getHours() + 23)
-
-      // Format to 'YYYY-MM-DDTHH:mm'
-      const formatDateTimeLocal = (date) => {
-        const pad = (num) => String(num).padStart(2, '0')
-        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
-      }
-      setDealEndTime(formatDateTimeLocal(endDate))
-    }
+    setActivities(filterActivities)
 
     if (discountType == 'PRICE') {
       setDiscountPriceList(PromoPriceList.PRICE)
     } else {
       setDiscountPriceList([])
     }
-  }, [
-    filterText,
-    filterStatus,
-    filterShop,
-    sortBy,
-    dealStartTime,
-    discountType,
-    searchTerm,
-    searchShop,
-  ])
+  }, [filterText, filterStatus, filterShop, sortBy, discountType, searchTerm, searchShop])
+
+  // For Flash Deal , filter products
+  useEffect(() => {
+    if (!dealSearchTerm) {
+      setProducts(tempProducts)
+      return
+    }
+    const filterProducts = products.filter((product) =>
+      product.title.toLowerCase().includes(dealSearchTerm.toLowerCase()),
+    )
+    setProducts(filterProducts)
+  }, [dealSearchTerm])
 
   useEffect(() => {
     setLoading(true)
-    const fetchProducts = async () => {
+    const fetchPromos = async () => {
       try {
-        const res = await apiRequest.get('/products/json')
+        const res = await apiRequest.get('/promos/json')
 
         // console.log(res.data.products);
         setTotal(res.data.total)
-        setFilteredProducts(res.data.products)
+        setActivities(res.data.promos)
         setLoading(false)
       } catch (error) {
         console.log(error)
@@ -218,24 +229,31 @@ const Products = () => {
       }
     }
 
-    fetchProducts()
+    fetchPromos()
     fetchShops()
     getDefaultShop()
   }, [])
 
-  const openModal = (type, product) => {
+  const eventAddActivity = async () => {
+    handleShowToast('Tạo promo thành công!')
+    // call fetch promos
+    await syncPromos()
+  }
+
+  const openModal = (type, activity) => {
     handleShowToast('Đang tiến hành lấy dữ liệu...')
     // console.log(type, product);
     try {
       if (type == 'delete') {
-        setProduct(product)
+        setActivity(activity)
         setVisibleDelete(true)
+        setDeleteActivityObject(activity)
       } else if (type == 'tiktok') {
       } else {
         setModalType(type)
         apiRequest
-          .post('/products/tiktok/' + product.id, {
-            shopId: product.shop.id,
+          .post('/promos/' + activity.id, {
+            shopId: activity.shopId,
           })
           .then((res) => {
             // console.log(res.data);
@@ -255,19 +273,55 @@ const Products = () => {
     setVisible(false)
   }
 
-  const callUpdatePrice = () => {
-    setIsUpdatePrice(true)
-    setVisibleUpdate(true)
+  const fetchProducts = async (row) => {
+    try {
+      const res = await apiRequest.get('/products/json')
+      const filterRes = res.data.products.filter((product) => product.shop_id == row.shop_id)
+      setTotal(filterRes.length)
+      setTempProducts(filterRes)
+      setProducts(filterRes)
+    } catch (error) {
+      console.log(error)
+    }
   }
 
-  const closeUpdatePrice = () => {
-    setIsUpdatePrice(false)
-    setVisibleUpdate(false)
+  const fetchDeal = async (shopId, dealId) => {
+    try {
+      const res = await apiRequest.get(`/deals/shop/${shopId}/promo/${dealId}`)
+      console.log(res.data)
+      setDetailFlashDeal(res.data)
+      const flashDeal = res.data
+      setDealShopId(shopId)
+      setDealId(dealId)
+      setDealProducts(flashDeal.products)
+      setDealStatus(flashDeal.status)
+      setDealTitle(flashDeal.title)
+      setDealActivityType(flashDeal.activity_type)
+      setDealProductLevel(flashDeal.product_level)
+      setDealStartTime(formatDateTimeLocal(new Date(flashDeal.begin_time * 1000)))
+      setDealEndTime(formatDateTimeLocal(new Date(flashDeal.end_time * 1000)))
+    } catch (error) {
+      console.log(error)
+    }
   }
 
-  const callFlashDeal = () => {
-    setIsFlashDeal(true)
-    setVisibleFlashDeal(true)
+  const formatDateTimeLocal = (date) => {
+    const pad = (num) => String(num).padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  }
+
+  const callFlashDeal = async (row) => {
+    try {
+      await fetchProducts(row)
+        .then((res) => {
+          fetchDeal(row.shopId, row.id)
+        })
+        .finally(() => {
+          console.log(row)
+          setIsFlashDeal(true)
+          setVisibleFlashDeal(true)
+        })
+    } catch (error) {}
   }
 
   const closeFlashDeal = () => {
@@ -292,7 +346,7 @@ const Products = () => {
     if (selectAll) {
       setSelectedRows([])
     } else {
-      setSelectedRows(filteredProducts.map((product) => product.id))
+      setSelectedRows(activities.map((product) => product.id))
     }
     setSelectAll(!selectAll)
   }
@@ -331,7 +385,7 @@ const Products = () => {
     setProgress(0)
     try {
       let skus = []
-      filteredProducts.forEach((pd) => {
+      activities.forEach((pd) => {
         if (selectedRows.includes(pd.id)) {
           skus.push({
             shopId: pd.shop.id,
@@ -364,10 +418,10 @@ const Products = () => {
     }
   }
 
-  const addFlashDeal = async () => {
+  const submitFlashDeal = async () => {
     try {
       let skus = []
-      filteredProducts.forEach((pd) => {
+      products.forEach((pd) => {
         if (selectedRows.includes(pd.id)) {
           skus.push({
             shopId: pd.shop.id,
@@ -380,6 +434,19 @@ const Products = () => {
         handleShowToast('Vui lòng chọn sản phẩm!')
         return
       }
+      // Flash deal
+      if (dealStartTime && !dealEndTime) {
+        // set end date to start date + 23 hours
+        const endDate = new Date(dealStartTime)
+        endDate.setHours(endDate.getHours() + 23)
+
+        // Format to 'YYYY-MM-DDTHH:mm'
+        const formatDateTimeLocal = (date) => {
+          const pad = (num) => String(num).padStart(2, '0')
+          return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+        }
+        setDealEndTime(formatDateTimeLocal(endDate))
+      }
       if (!dealStartTime || !dealEndTime) {
         handleShowToast('Vui lòng nhập thời gian!')
         return
@@ -391,34 +458,46 @@ const Products = () => {
       let payload = {}
       if (discountType == 'ALL') {
         payload = {
-          skus: skus,
-          title: dealTitle,
+          shopId: dealShopId,
+          activityId: dealId,
+          pIds: skus,
           discount: dealDiscount,
           qtyLimit: dealQtyLimit,
           qtyPerUser: dealQtyPerUser,
-          startTime: dealStartTime,
-          endTime: dealEndTime,
+          activity_type: dealActivityType,
+          product_level: dealProductLevel,
         }
       } else {
         payload = {
-          skus: skus,
+          shopId: dealShopId,
+          activityId: dealId,
+          pIds: skus,
           title: dealTitle,
           discount: discountPriceList,
           qtyLimit: dealQtyLimit,
           qtyPerUser: dealQtyPerUser,
-          startTime: dealStartTime,
-          endTime: dealEndTime,
+          activity_type: dealActivityType,
+          product_level: dealProductLevel,
         }
       }
 
       console.log(payload)
 
-      const resp = await apiRequest.post('/deals', payload).then((res) => {
-        const activities = res.data.activities
-        payload.activities = activities
-        apiRequest.post('/deals/activities', payload)
-      })
-      console.log(resp.data)
+      const resp = await apiRequest
+        .post('/deals', payload)
+        .then((response) => {
+          const payload2 = {
+            shop_id: dealShopId,
+            activity_type: dealActivityType,
+            product_level: dealProductLevel,
+            activity_id: response.data.activity_id,
+            products: response.data.products,
+          }
+          apiRequest.post(`/deals/activities`, payload2)
+        })
+        .finally(() => {
+          console.log('done')
+        })
       if (resp.data) {
         handleShowToast('Flash Deal thành cong!')
       }
@@ -460,9 +539,9 @@ const Products = () => {
     setDiscountPriceList([...discountPriceList])
   }
 
-  const syncProducts = async () => {
+  const syncPromos = async () => {
     try {
-      apiRequest.get('/shops/sync-products-all').then((res) => {
+      apiRequest.get('/shops/sync-promos-all').then((res) => {
         handleShowToast('Sync sản phẩm thành công!')
         window.location.reload()
       })
@@ -472,22 +551,19 @@ const Products = () => {
   }
 
   const columns = [
-    // {
-    //   name: <CFormCheck checked={selectAll} onChange={toggleSelectAll} />,
-    //   cell: (row) => (
-    //     <CFormCheck
-    //       checked={selectedRows.includes(row.id)}
-    //       onChange={() => toggleRowSelection(row.id)}
-    //     />
-    //   ),
-    //   grow: 0.2,
-    //   width: '50px',
-    // },
     { name: 'Title', selector: (row) => row.title, sortable: true, width: '250px' },
-    { name: 'Shop', selector: (row) => row.shop.name, sortable: true, width: '200px' },
+    {
+      name: 'Shop',
+      selector: (row) => {
+        const shop = shops.find((s) => s.id == row.shopId)
+        return shop ? shop.name : ''
+      },
+      sortable: true,
+      width: '200px',
+    },
     {
       name: 'Create Time',
-      selector: (row) => format(new Date(row.create_time * 1000).toLocaleString()),
+      selector: (row) => moment(new Date(row.create_time)).format('DD/MM/YYYY HH:mm'),
       sortable: true,
       width: '200px',
     },
@@ -498,8 +574,12 @@ const Products = () => {
       grow: 1,
       cell: (row) => (
         <div className="d-flex flex-column align-items-center">
-          {row.status == 'ACTIVATE' ? (
+          {row.status === 'NOT_START' ? (
+            <CBadge color="info">{row.status}</CBadge>
+          ) : row.status === 'ONGOING' ? (
             <CBadge color="success">{row.status}</CBadge>
+          ) : row.status === 'EXPIRED' ? (
+            <CBadge color="warning">{row.status}</CBadge>
           ) : (
             <CBadge color="danger">{row.status}</CBadge>
           )}
@@ -512,10 +592,7 @@ const Products = () => {
       name: 'Actions',
       cell: (row) => (
         <div className="d-flex flex-row items-center">
-          <CButton size="icon" variant="ghost" onClick={() => openModal('view', row)}>
-            <Eye className="w-4 h-4" />
-          </CButton>
-          <CButton size="icon" variant="ghost" onClick={() => openModal('edit', row)}>
+          <CButton size="icon" variant="ghost" onClick={() => callFlashDeal(row)}>
             <Edit className="w-4 h-4" />
           </CButton>
           <CButton size="icon" variant="ghost" onClick={() => openModal('delete', row)}>
@@ -532,7 +609,7 @@ const Products = () => {
       name: <CFormCheck checked={selectAll} onChange={toggleSelectAll} />,
       cell: (row) => (
         <CFormCheck
-          checked={selectedRows.includes(row.id)}
+          checked={selectedRows.includes(row.id) || dealProducts.find((p) => p.id == row.id)}
           onChange={() => toggleRowSelection(row.id)}
         />
       ),
@@ -540,11 +617,39 @@ const Products = () => {
       width: '50px',
     },
     { name: 'Title', selector: (row) => row.title, sortable: true, width: '250px' },
-    { name: 'Shop', selector: (row) => row.shop.name, sortable: true, width: '200px' },
     {
-      name: 'Create Time',
-      selector: (row) => format(new Date(row.create_time * 1000).toLocaleString()),
-      sortable: true,
+      name: 'Promo',
+      selector: (row) => {
+        // check row.id in dealProducts product id
+        const product = dealProducts.find((p) => p.id == row.id)
+        return product ? '✅' : ''
+      },
+      sortable: false,
+      width: '200px',
+    },
+    {
+      name: 'Promo Discount',
+      selector: (row) => {
+        // check row.id in dealProducts product id
+        const product = dealProducts.find((p) => p.id == row.id)
+        return product ? (
+          <CListGroup>
+            {product.activity_price.amount ? (
+              <CBadge color="success">{product.activity_price.amount}</CBadge>
+            ) : (
+              ''
+            )}
+            {product.skus.map((sku) => (
+              <CListGroupItem>
+                {sku.id} - {sku.discount ? sku.discount + '%' : ''}
+              </CListGroupItem>
+            ))}
+          </CListGroup>
+        ) : (
+          ''
+        )
+      },
+      sortable: false,
       width: '200px',
     },
     {
@@ -569,11 +674,17 @@ const Products = () => {
   return (
     <>
       {alert && <CAlert color="success">{alert}</CAlert>}
+      <ToastNoti toast={toast} setToast={setToast} />
+      <AddActivity
+        visible={isAddActivity}
+        setVisible={setIsAddActivity}
+        onChangeActivityEvent={eventAddActivity}
+      />
       <CRow>
         <CCol sm={5}>
           <h4 id="traffic" className="card-title mb-0">
-            Sản phẩm shop ({total})
-            <CButton color="warning" className="ms-2 mb-2" onClick={() => syncProducts()}>
+            Promo ({total})
+            <CButton color="warning" className="ms-2 mb-2" onClick={() => syncPromos()}>
               <CIcon icon={cilReload} className="me-1" />
             </CButton>
           </h4>
@@ -590,16 +701,6 @@ const Products = () => {
               onChange={(e) => setFilterText(e.target.value)}
             />
           </CInputGroup>
-        </CCol>
-        <CCol>
-          <MultiSelect
-            displayValue="name"
-            options={StatusEnum.PRODUCT_STATUS}
-            value={filterStatus}
-            onSelect={filterBy}
-            onRemove={filterBy}
-            placeholder="Trạng thái sản phẩm"
-          />
         </CCol>
         <CCol>
           <MultiSelect
@@ -638,11 +739,11 @@ const Products = () => {
         <CCol>
           <CButton
             // disabled={selectedRows.length === 0}
-            color="warning"
-            className="float-end"
-            onClick={() => callUpdatePrice()}
+            color="primary"
+            className="float-start"
+            onClick={() => setIsAddActivity(true)}
           >
-            <CirclePercent className="me-1" /> Sửa giá
+            <Zap className="me-1" /> Tạo Deal
           </CButton>
         </CCol>
       </CRow>
@@ -658,7 +759,7 @@ const Products = () => {
                 <DataTable
                   className="table table-hover"
                   columns={columns}
-                  data={filteredProducts}
+                  data={activities}
                   pagination
                   highlightOnHover
                   noHeader
@@ -678,72 +779,14 @@ const Products = () => {
           product={modalData}
         />
       )}
-      {product && (
-        <DeleteProduct visible={visibleDelete} setVisible={setVisibleDelete} product={product} />
+      {activity && (
+        <DeleteActivity
+          visible={visibleDelete}
+          setVisible={setVisibleDelete}
+          activity={deleteActivityObject}
+        />
       )}
-      {isUpdatePrice && (
-        <div className="app">
-          <CModal
-            visible={visibleUpdate}
-            onClose={closeUpdatePrice}
-            alignment="center"
-            size="xl"
-            scrollable
-          >
-            <CModalHeader>
-              <CModalTitle className="ms-5">Update price</CModalTitle>
-            </CModalHeader>
-            <CModalBody>
-              <ToastNoti toast={toast} setToast={setToast} />
-              <div className="modal-body">
-                <div className="column input-section">
-                  <CRow className="mt-3">
-                    <CFormInput
-                      type="number"
-                      className="col-4"
-                      placeholder=""
-                      value={percentage}
-                      onChange={(e) => setPercentage(e.target.value)}
-                      label="Percent (%)"
-                    />
-                  </CRow>
-                </div>
-                <div className="column product-list">
-                  <div className="header-fixed d-flex justify-content-between align-items-center">
-                    <h5>Products</h5>
-                  </div>
-                  <div className="scrollable">
-                    <DataTable
-                      columns={tableColumns}
-                      data={filteredProducts.filter((p) => selectedRows.includes(p.id))}
-                      noHeader
-                      pagination
-                      highlightOnHover
-                    />
-                  </div>
-                </div>
-              </div>
-            </CModalBody>
-            <CFooter className="d-flex justify-content-center">
-              <div>
-                {updating ? (
-                  <div>
-                    <div>Đang thực hiện tiến trình ..</div>
-                    <CProgress color="success" value={progress} max={100} />
-                  </div>
-                ) : (
-                  <>
-                    <CButton color="primary" className="me-5" onClick={updatePrices}>
-                      Update
-                    </CButton>
-                  </>
-                )}
-              </div>
-            </CFooter>
-          </CModal>
-        </div>
-      )}
-      {isFlashDeal && (
+      {isFlashDeal && products && (
         <div className="app">
           <CModal
             visible={visibleFlashDeal}
@@ -763,13 +806,63 @@ const Products = () => {
               <div className="modal-body">
                 <div className="column input-section">
                   <CRow className="mt-3">
+                    <CCol className="col-2">
+                      <CFormLabel>Status</CFormLabel>
+                    </CCol>
+                    <CCol className="col-4">
+                      <CBadge color="success">{dealStatus}</CBadge>
+                    </CCol>
+                  </CRow>
+                  <CRow>
+                    <CFormLabel>
+                      Shop {shops.find((shop) => shop.id === dealShopId)?.name}
+                    </CFormLabel>
+                  </CRow>
+                  <CRow className="mt-3">
                     <CFormInput
                       type="text"
                       className="col-4 ms-2"
                       placeholder=""
                       value={dealTitle}
                       onChange={(e) => setDealTitle(e.target.value)}
-                      label="Tên chiến dịch promo"
+                      label="Tên chiến dịch"
+                      readOnly
+                      disabled
+                    />
+                  </CRow>
+                  <CRow className="mt-3">
+                    <CFormInput
+                      type="datetime-local"
+                      placeholder="Start"
+                      aria-label="Start"
+                      aria-describedby="basic-addon2"
+                      value={dealStartTime}
+                      onChange={(e) => setDealStartTime(e.target.value)}
+                      label="Ngày hiệu lực"
+                      readOnly
+                      disabled
+                    />
+                  </CRow>
+                  <CRow className="mt-3">
+                    <CFormLabel>
+                      Ngày kết thúc
+                      <CTooltip
+                        content={PromoHelp.DATE_END}
+                        placement="top"
+                        style={customTooltipStyle}
+                      >
+                        <CircleHelp className="ms-1" />
+                      </CTooltip>
+                    </CFormLabel>
+                    <CFormInput
+                      type="datetime-local"
+                      placeholder="End"
+                      aria-label="End"
+                      aria-describedby="basic-addon2"
+                      value={dealEndTime}
+                      onChange={(e) => setDealEndTime(e.target.value)}
+                      readOnly
+                      disabled
                     />
                   </CRow>
                   <CRow>
@@ -917,37 +1010,6 @@ const Products = () => {
                       onChange={(e) => setDealQtyPerUser(e.target.value)}
                     />
                   </CRow>
-                  <CRow className="mt-3">
-                    <CFormInput
-                      type="datetime-local"
-                      placeholder="Start"
-                      aria-label="Start"
-                      aria-describedby="basic-addon2"
-                      value={dealStartTime}
-                      onChange={(e) => setDealStartTime(e.target.value)}
-                      label="Ngày hiệu lực"
-                    />
-                  </CRow>
-                  <CRow className="mt-3">
-                    <CFormLabel>
-                      Ngày kết thúc
-                      <CTooltip
-                        content={PromoHelp.DATE_END}
-                        placement="top"
-                        style={customTooltipStyle}
-                      >
-                        <CircleHelp className="ms-1" />
-                      </CTooltip>
-                    </CFormLabel>
-                    <CFormInput
-                      type="datetime-local"
-                      placeholder="End"
-                      aria-label="End"
-                      aria-describedby="basic-addon2"
-                      value={dealEndTime}
-                      onChange={(e) => setDealEndTime(e.target.value)}
-                    />
-                  </CRow>
                 </div>
                 <div className="column product-list">
                   <CRow className="header-fixed d-flex flex-row">
@@ -957,22 +1019,9 @@ const Products = () => {
                         className="col-4 ms-2"
                         placeholder=""
                         label="Search"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={dealSearchTerm}
+                        onChange={(e) => setDealSearchTerm(e.target.value)}
                       />
-                    </CCol>
-                    <CCol className="d-flex ms-5" cols="6">
-                      <CFormSelect
-                        value={searchShop}
-                        onChange={(e) => setSearchShop(e.target.value)}
-                      >
-                        <option>Shop</option>
-                        {shops.map((shop) => (
-                          <option key={shop.id} value={shop.id}>
-                            {shop.name}
-                          </option>
-                        ))}
-                      </CFormSelect>
                     </CCol>
                   </CRow>
                   <CRow className="mt-3"></CRow>
@@ -982,7 +1031,7 @@ const Products = () => {
                   <div className="scrollable">
                     <DataTable
                       columns={tableColumns}
-                      data={filteredProducts}
+                      data={products}
                       noHeader
                       pagination
                       highlightOnHover
@@ -1000,8 +1049,8 @@ const Products = () => {
                   </div>
                 ) : (
                   <>
-                    <CButton color="primary" className="me-5" onClick={addFlashDeal}>
-                      Create
+                    <CButton color="primary" className="me-5" onClick={submitFlashDeal}>
+                      Cập nhật
                     </CButton>
                   </>
                 )}
@@ -1267,4 +1316,4 @@ const ModalDeleteProduct = ({ visible, setVisible, product }) => {
   )
 }
 
-export default Products
+export default Acvitites

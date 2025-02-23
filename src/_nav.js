@@ -1,21 +1,22 @@
 import React from 'react'
-import { 
-  Boxes, 
-  DatabaseZap, 
+import {
+  Boxes,
+  DatabaseZap,
   Filter,
-  Gauge, 
-  Hand, 
-  KeySquare, 
-  LaptopMinimal, 
-  LayoutTemplate, 
-  Package, 
-  Send, 
-  ShoppingBag, 
-  SquareUserRound, 
-  Store, 
-  Users, 
-  Waypoints, 
-  Wrench 
+  Gauge,
+  Hand,
+  KeySquare,
+  LaptopMinimal,
+  LayoutTemplate,
+  Package,
+  Send,
+  ShoppingBag,
+  SquareUserRound,
+  Store,
+  Users,
+  Waypoints,
+  Wrench,
+  Zap,
 } from 'lucide-react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -42,34 +43,40 @@ const _nav = [
           <React.Fragment>
             {'Listing'} <Package className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
+        ),
         to: '/listings',
       },
       {
         component: CNavItem,
         name: (
           <React.Fragment>
-            {'Template'} <LayoutTemplate className='w-4 h-4 ms-2' />
+            {'Template'} <LayoutTemplate className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
+        ),
         to: '/templates',
       },
       {
         component: CNavItem,
         name: (
           <React.Fragment>
-            {'Sản phẩm'} <Boxes className='w-4 h-4 ms-2' />
+            {'Sản phẩm'} <Boxes className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
+        ),
         to: '/products',
-      }
+      },
     ],
   },
   {
     component: CNavItem,
     name: 'Orders',
     to: '/orders',
-    icon: <ShoppingBag className="w-4 h-4 me-2" />
+    icon: <ShoppingBag className="w-4 h-4 me-2" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Promotions',
+    to: '/promo',
+    icon: <Zap className="w-4 h-4 me-2" />,
   },
   {
     component: CNavGroup,
@@ -84,7 +91,7 @@ const _nav = [
             {'Cửa hàng'}
             <Store className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
+        ),
         to: '/shops',
       },
       {
@@ -94,7 +101,7 @@ const _nav = [
             {'Nhóm'}
             <Users className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
+        ),
         to: '/teams',
       },
       {
@@ -104,14 +111,14 @@ const _nav = [
             {'User'}
             <SquareUserRound className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
+        ),
         to: '/users',
-      },     
+      },
     ],
   },
   {
     component: CNavGroup,
-    name: 'Tools',    
+    name: 'Tools',
     icon: <Wrench className="w-4 h-4 me-2" />,
     items: [
       {
@@ -122,7 +129,7 @@ const _nav = [
             <Waypoints className="w-4 h-4 ms-2" />
           </React.Fragment>
         ),
-        to: '/proxies'        
+        to: '/proxies',
       },
       {
         component: CNavItem,
@@ -131,8 +138,8 @@ const _nav = [
             {'Token'}
             <KeySquare className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
-        to: '/tools'
+        ),
+        to: '/tools',
       },
       {
         component: CNavItem,
@@ -141,8 +148,8 @@ const _nav = [
             {'Filter'}
             <Filter className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
-        to: '/filters'
+        ),
+        to: '/filters',
       },
       {
         component: CNavItem,
@@ -151,11 +158,11 @@ const _nav = [
             {'Notify'}
             <Send className="w-4 h-4 ms-2" />
           </React.Fragment>
-        ),        
-        to: '/notify'
-      }
-    ]
-  }
+        ),
+        to: '/notify',
+      },
+    ],
+  },
 ]
 
 export default _nav
