@@ -624,7 +624,7 @@ const Acvitites = () => {
         const product = dealProducts.find((p) => p.id == row.id)
         return product ? '✅' : ''
       },
-      sortable: false,
+      sortable: true,
       width: '200px',
     },
     {
