@@ -25,6 +25,7 @@ import {
   CListGroupItem,
   CModal,
   CModalBody,
+  CModalFooter,
   CModalHeader,
   CModalTitle,
   CProgress,
@@ -49,7 +50,7 @@ import UploadWidget from '../../components/uploadWidget/UploadWidget'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import DeactiveActivity from './deactiveActivity'
-import moment from 'moment'
+import moment from 'moment-timezone'
 import './promo.css'
 
 // Enum
@@ -96,6 +97,11 @@ const Acvitites = () => {
   const [modalType, setModalType] = useState('')
   const [visible, setVisible] = useState(false)
 
+  // Sync
+  const [isSyncWithShop, setIsSyncWithShop] = useState(false)
+  const [syncShopModal, setSyncShopModal] = useState(false)
+  const [syncShopChoose, setSyncShopChoose] = useState(false)
+
   // Delete
   const [activity, setActivity] = useState(null)
   const [visibleDelete, setVisibleDelete] = useState(false)
@@ -113,6 +119,8 @@ const Acvitites = () => {
   const [visibleFlashDeal, setVisibleFlashDeal] = useState(false)
   const [detailFlashDeal, setDetailFlashDeal] = useState({})
   const [dealSearchTerm, setDealSearchTerm] = useState('')
+  const [dealSearchProductIDs, setDealSearchProductIDs] = useState('')
+  const [dealSearchProductIDsArray, setDealSearchProductIDsArray] = useState([])
   const [searchShop, setSearchShop] = useState('')
   /// Flash info
   const [dealId, setDealId] = useState('')
@@ -121,15 +129,21 @@ const Acvitites = () => {
   const [dealShopId, setDealShopId] = useState('')
   const [dealTitle, setDealTitle] = useState('Promo ' + new Date().toLocaleString())
   const [dealDiscount, setDealDiscount] = useState()
-  const [dealQtyLimit, setDealQtyLimit] = useState(-1)
-  const [dealQtyPerUser, setDealQtyPerUser] = useState(-1)
+  //
+  const [dealQtyLimitOption, setDealQtyLimitOption] = useState('unlimited')
+  const [dealQtyLimit, setDealQtyLimit] = useState(1)
+  //
+  const [dealQtyPerUserOption, setDealQtyPerUserOption] = useState('unlimited')
+  const [dealQtyPerUser, setDealQtyPerUser] = useState(1)
   const [dealStartTime, setDealStartTime] = useState('')
   const [dealEndTime, setDealEndTime] = useState('')
   const [dealActivityType, setDealActivityType] = useState('')
   const [dealProductLevel, setDealProductLevel] = useState('')
   const [updatingFlashDeal, setUpdatingFlashDeal] = useState(false)
-  const [discountType, setDiscountType] = useState('ALL')
+  const [discountType, setDiscountType] = useState('PRICE')
   const [discountPriceList, setDiscountPriceList] = useState([])
+
+  const [dealSubmitMessage, setDealSubmitMessage] = useState('')
   //////////// Flash Deal ////////////////////////////////////
 
   const [alert, setAlert] = useState('')
@@ -154,8 +168,17 @@ const Acvitites = () => {
     ],
   }
 
+  const QUANTITY_LIMIT_ENUM = [
+    { value: 'unlimited', label: 'No Limit' },
+    { value: 'limited', label: 'Limit' },
+  ]
+
+  const QUANTITY_PER_USER_ENUM = [
+    { value: 'unlimited', label: 'No Limit' },
+    { value: 'limited', label: 'Limit' },
+  ]
+
   useEffect(() => {
-    console.log(searchShop)
     const filterActivities = activities
       .filter((activity) => activity.title.toLowerCase().includes(filterText.toLowerCase()))
       .filter((activity) => (filterShop.length > 0 ? filterShop.includes(activity.shopId) : true))
@@ -184,55 +207,66 @@ const Acvitites = () => {
   }, [dealSearchTerm])
 
   useEffect(() => {
+    if (!dealSearchProductIDs) {
+      setProducts(tempProducts)
+      return
+    }
+    const dealSearchProductIDsArr = dealSearchProductIDs.split(',')
+    setDealSearchProductIDsArray(dealSearchProductIDsArr)
+    // convert dealSearchProductIDs to array
+    const filterProducts = products.filter((product) =>
+      dealSearchProductIDsArr.includes(product.id),
+    )
+    setProducts(filterProducts)
+  }, [dealSearchProductIDs])
+
+  useEffect(() => {
     setLoading(true)
-    const fetchPromos = async () => {
-      try {
-        const res = await apiRequest.get('/promos/json')
-
-        // console.log(res.data.products);
-        setTotal(res.data.total)
-        setActivities(res.data.promos)
-        setLoading(false)
-      } catch (error) {
-        console.log(error)
-      }
-    }
-
-    const fetchShops = async () => {
-      try {
-        const res = await apiRequest.get('/shops/all')
-        // console.log(res.data);
-        setShops(res.data)
-      } catch (error) {
-        console.log(error)
-      }
-    }
-
-    const getDefaultShop = async () => {
-      try {
-        const defaultShop = await apiRequest.post('/users/getDefaultShop')
-        if (defaultShop.status === 200) {
-          apiRequest
-            .post('/proxy/connect', { shopId: defaultShop.data.defaultShop.id })
-            .then((res) => {
-              setAlert(res.data.message)
-            })
-            .catch((err) => {
-              console.log(err)
-              setAlert(err.response.data.message)
-            })
-        }
-        // console.log(defaultShop);
-      } catch (error) {
-        setAlert(error.response.data.message)
-        console.log(error)
-      }
-    }
-
     fetchPromos()
     fetchShops()
     getDefaultShop()
   }, [])
+
+  const fetchPromos = async () => {
+    try {
+      const res = await apiRequest.get('/promos/json')
+
+      setTotal(res.data.total)
+      setActivities(res.data.promos)
+      setLoading(false)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const fetchShops = async () => {
+    try {
+      const res = await apiRequest.get('/shops/all')
+      setShops(res.data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const getDefaultShop = async () => {
+    try {
+      const defaultShop = await apiRequest.post('/users/getDefaultShop')
+      if (defaultShop.status === 200) {
+        apiRequest
+          .post('/proxy/connect', { shopId: defaultShop.data.defaultShop.id })
+          .then((res) => {
+            setAlert(res.data.message)
+          })
+          .catch((err) => {
+            console.log(err)
+            setAlert(err.response.data.message)
+          })
+      }
+    } catch (error) {
+      setAlert(error.response.data.message)
+      console.log(error)
+    }
+  }
 
   const eventAddActivity = async () => {
     handleShowToast('Tạo promo thành công!')
@@ -298,16 +332,19 @@ const Acvitites = () => {
       setDealTitle(flashDeal.title)
       setDealActivityType(flashDeal.activity_type)
       setDealProductLevel(flashDeal.product_level)
-      setDealStartTime(formatDateTimeLocal(new Date(flashDeal.begin_time * 1000)))
-      setDealEndTime(formatDateTimeLocal(new Date(flashDeal.end_time * 1000)))
+      setDealStartTime(formatDateTimeLocal(flashDeal.begin_time))
+      setDealEndTime(formatDateTimeLocal(flashDeal.end_time))
     } catch (error) {
       console.log(error)
     }
   }
 
-  const formatDateTimeLocal = (date) => {
-    const pad = (num) => String(num).padStart(2, '0')
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  const formatDateTimeLocal = (timestamp) => {
+    return moment.unix(timestamp).tz('America/Los_Angeles').format('YYYY-MM-DDTHH:mm')
+  }
+
+  const formatDateTimeDisplay = (timestamp) => {
+    return moment.unix(timestamp).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm A')
   }
 
   const callFlashDeal = async (row) => {
@@ -343,7 +380,9 @@ const Acvitites = () => {
   }
 
   const toggleSelectAll = () => {
-    if (selectAll) {
+    if (dealSearchProductIDsArray.length > 0) {
+      setSelectedRows(dealSearchProductIDsArray)
+    } else if (selectAll) {
       setSelectedRows([])
     } else {
       setSelectedRows(activities.map((product) => product.id))
@@ -452,6 +491,16 @@ const Acvitites = () => {
         return
       }
 
+      let tmpDealQtyLimit = dealQtyLimit
+      if (dealQtyLimitOption == 'unlimited') {
+        tmpDealQtyLimit = -1
+      }
+
+      let tmpQtyPerUser = dealQtyPerUser
+      if (dealQtyPerUserOption == 'unlimited') {
+        tmpQtyPerUser = -1
+      }
+
       setProgress(0)
       setUpdatingFlashDeal(true)
 
@@ -462,8 +511,8 @@ const Acvitites = () => {
           activityId: dealId,
           pIds: skus,
           discount: dealDiscount,
-          qtyLimit: dealQtyLimit,
-          qtyPerUser: dealQtyPerUser,
+          qtyLimit: tmpDealQtyLimit,
+          qtyPerUser: tmpQtyPerUser,
           activity_type: dealActivityType,
           product_level: dealProductLevel,
         }
@@ -474,8 +523,8 @@ const Acvitites = () => {
           pIds: skus,
           title: dealTitle,
           discount: discountPriceList,
-          qtyLimit: dealQtyLimit,
-          qtyPerUser: dealQtyPerUser,
+          qtyLimit: tmpDealQtyLimit,
+          qtyPerUser: tmpQtyPerUser,
           activity_type: dealActivityType,
           product_level: dealProductLevel,
         }
@@ -499,7 +548,8 @@ const Acvitites = () => {
           console.log('done')
         })
       if (resp.data) {
-        handleShowToast('Flash Deal thành cong!')
+        setDealSubmitMessage(resp.data.message)
+        handleShowToast(resp.data.message)
       }
 
       let progressInterval = setInterval(() => {
@@ -541,13 +591,41 @@ const Acvitites = () => {
 
   const syncPromos = async () => {
     try {
-      apiRequest.get('/shops/sync-promos-all').then((res) => {
-        handleShowToast('Sync sản phẩm thành công!')
-        window.location.reload()
+      setIsSyncWithShop(true)
+      setSyncShopModal(true)
+
+      // apiRequest.get('/shops/sync-promos-all').then((res) => {
+      //   handleShowToast('Sync sản phẩm thành công!')
+      //   window.location.reload()
+      // })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const handleSyncShop = async () => {
+    try {
+      if (!syncShopChoose) {
+        handleShowToast('Vui lồng chọn cửa hàng để sync!')
+        return
+      }
+
+      const syncShop = shops.find((shop) => shop.id == syncShopChoose)
+
+      apiRequest.get(`/shops/sync-promo/${syncShop.id}`).then((res) => {
+        handleShowToast(`Sync promo của shop ${syncShop.name} thành công!`)
+        toggleSyncShop()
+        setActivities([])
+        fetchPromos()
       })
     } catch (error) {
       console.log(error)
     }
+  }
+
+  const toggleSyncShop = () => {
+    setIsSyncWithShop(!isSyncWithShop)
+    setSyncShopModal(!syncShopModal)
   }
 
   const columns = [
@@ -559,13 +637,25 @@ const Acvitites = () => {
         return shop ? shop.name : ''
       },
       sortable: true,
+      width: '100px',
+    },
+    {
+      name: 'Bắt đầu',
+      selector: (row) => formatDateTimeDisplay(row.begin_time),
+      sortable: true,
       width: '200px',
     },
     {
-      name: 'Create Time',
-      selector: (row) => moment(new Date(row.create_time)).format('DD/MM/YYYY HH:mm'),
+      name: 'Kết thúc',
+      selector: (row) => formatDateTimeDisplay(row.end_time),
       sortable: true,
       width: '200px',
+    },
+    {
+      name: 'Tạo lúc',
+      selector: (row) => moment(new Date(row.create_time)).format('DD/MM/YYYY HH:mm'),
+      sortable: true,
+      width: '150px',
     },
     {
       name: 'Status',
@@ -600,7 +690,7 @@ const Acvitites = () => {
           </CButton>
         </div>
       ),
-      width: '200px',
+      width: '150px',
     },
   ]
 
@@ -652,23 +742,6 @@ const Acvitites = () => {
       sortable: false,
       width: '200px',
     },
-    {
-      name: 'Status',
-      selector: (row) => row.status,
-      sortable: true,
-      grow: 1,
-      cell: (row) => (
-        <div className="d-flex flex-column align-items-center">
-          {row.status == 'ACTIVATE' ? (
-            <CBadge color="success">{row.status}</CBadge>
-          ) : (
-            <CBadge color="danger">{row.status}</CBadge>
-          )}
-          <span>{row.quality}</span>
-        </div>
-      ),
-      width: '150px',
-    },
   ]
 
   return (
@@ -685,7 +758,7 @@ const Acvitites = () => {
           <h4 id="traffic" className="card-title mb-0">
             Promo ({total})
             <CButton color="warning" className="ms-2 mb-2" onClick={() => syncPromos()}>
-              <CIcon icon={cilReload} className="me-1" />
+              <CIcon icon={cilReload} className="me-1" /> Sync Promo
             </CButton>
           </h4>
         </CCol>
@@ -871,7 +944,7 @@ const Acvitites = () => {
                         type="radio"
                         name="discountType"
                         id="discountAll"
-                        label="Tất cả"
+                        label="Discount"
                         className="me-3"
                         value="ALL"
                         checked={discountType === 'ALL'}
@@ -881,7 +954,7 @@ const Acvitites = () => {
                         type="radio"
                         name="discountType"
                         id="discountPrice"
-                        label="Theo giá"
+                        label="% Percent"
                         className="me-3"
                         value="PRICE"
                         checked={discountType === 'PRICE'}
@@ -891,16 +964,6 @@ const Acvitites = () => {
                   </CRow>
                   {discountPriceList.length > 0 ? (
                     <CRow className="mt-3">
-                      <CFormLabel>
-                        Giá trị giảm giá (%)
-                        <CTooltip
-                          content={PromoHelp.DISCOUNT}
-                          placement="top"
-                          style={customTooltipStyle}
-                        >
-                          <CircleHelp className="ms-1" />
-                        </CTooltip>
-                      </CFormLabel>
                       {discountPriceList.map((item, index) => (
                         <CRow>
                           <CCol>
@@ -953,16 +1016,6 @@ const Acvitites = () => {
                     </CRow>
                   ) : (
                     <CRow className="mt-3">
-                      <CFormLabel>
-                        Giá trị giảm giá (%)
-                        <CTooltip
-                          content={PromoHelp.DISCOUNT}
-                          placement="top"
-                          style={customTooltipStyle}
-                        >
-                          <CircleHelp className="ms-1" />
-                        </CTooltip>
-                      </CFormLabel>
                       <CFormInput
                         type="text"
                         className="col-4 ms-2"
@@ -974,7 +1027,7 @@ const Acvitites = () => {
                   )}
                   <CRow className="mt-3">
                     <CFormLabel>
-                      Số lượng sản phẩm
+                      The quantity limit of the product
                       <CTooltip
                         content={PromoHelp.QUANTITY_LIMIT}
                         placement="top"
@@ -983,17 +1036,34 @@ const Acvitites = () => {
                         <CircleHelp className="ms-1" />
                       </CTooltip>
                     </CFormLabel>
-                    <CFormInput
-                      type="text"
-                      className="col-4 ms-2"
-                      placeholder=""
-                      value={dealQtyLimit}
-                      onChange={(e) => setDealQtyLimit(e.target.value)}
-                    />
+                    <CInputGroup className="mt-4 d-flex ms-auto">
+                      {QUANTITY_LIMIT_ENUM.map((item, index) => (
+                        <CFormCheck
+                          key={index}
+                          type="radio"
+                          name="quantityLimit"
+                          id={item.value}
+                          label={item.label}
+                          className="me-3"
+                          value={item.value}
+                          checked={dealQtyLimitOption === item.value}
+                          onChange={(e) => setDealQtyLimitOption(e.target.value)}
+                        />
+                      ))}
+                    </CInputGroup>
+                    {dealQtyLimitOption === 'limited' && (
+                      <CFormInput
+                        type="text"
+                        className="col-4 ms-2"
+                        placeholder=""
+                        value={dealQtyLimit}
+                        onChange={(e) => setDealQtyLimit(e.target.value)}
+                      />
+                    )}
                   </CRow>
                   <CRow className="mt-3">
                     <CFormLabel>
-                      Giới hạn mua sản phẩm
+                      Limit of product purchase per buyer
                       <CTooltip
                         content={PromoHelp.PRODUCT_LIMIT}
                         placement="top"
@@ -1002,13 +1072,30 @@ const Acvitites = () => {
                         <CircleHelp className="ms-1" />
                       </CTooltip>
                     </CFormLabel>
-                    <CFormInput
-                      type="text"
-                      className="col-4 ms-2"
-                      placeholder=""
-                      value={dealQtyPerUser}
-                      onChange={(e) => setDealQtyPerUser(e.target.value)}
-                    />
+                    <CInputGroup className="mt-4 d-flex ms-auto">
+                      {QUANTITY_PER_USER_ENUM.map((item, index) => (
+                        <CFormCheck
+                          key={index}
+                          type="radio"
+                          name="productLimit"
+                          id={item.value}
+                          label={item.label}
+                          className="me-3"
+                          value={item.value}
+                          checked={dealQtyPerUserOption === item.value}
+                          onChange={(e) => setDealQtyPerUserOption(e.target.value)}
+                        />
+                      ))}
+                    </CInputGroup>
+                    {dealQtyPerUserOption === 'limited' && (
+                      <CFormInput
+                        type="text"
+                        className="col-4 ms-2"
+                        placeholder=""
+                        value={dealQtyPerUser}
+                        onChange={(e) => setDealQtyPerUser(e.target.value)}
+                      />
+                    )}
                   </CRow>
                 </div>
                 <div className="column product-list">
@@ -1021,6 +1108,18 @@ const Acvitites = () => {
                         label="Search"
                         value={dealSearchTerm}
                         onChange={(e) => setDealSearchTerm(e.target.value)}
+                      />
+                    </CCol>
+                  </CRow>
+                  <CRow className="header-fixed d-flex flex-row">
+                    <CCol className="d-flex" cols="6">
+                      <CFormInput
+                        type="text"
+                        className="col-4 ms-2"
+                        placeholder=""
+                        label="Product IDs"
+                        value={dealSearchProductIDs}
+                        onChange={(e) => setDealSearchProductIDs(e.target.value)}
                       />
                     </CCol>
                   </CRow>
@@ -1047,6 +1146,10 @@ const Acvitites = () => {
                     <div>Đang thực hiện tiến trình ..</div>
                     <CProgress color="success" value={progress} max={100} />
                   </div>
+                ) : dealSubmitMessage ? (
+                  <CRow>
+                    <span class="badge rounded-pill text-bg-danger">{dealSubmitMessage}</span>
+                  </CRow>
                 ) : (
                   <>
                     <CButton color="primary" className="me-5" onClick={submitFlashDeal}>
@@ -1058,6 +1161,30 @@ const Acvitites = () => {
             </CFooter>
           </CModal>
         </div>
+      )}
+      {isSyncWithShop && (
+        <CModal visible={syncShopModal} onClose={toggleSyncShop}>
+          <CModalHeader closeButton>Sync Promo</CModalHeader>
+          <CModalBody className="d-flex justify-content-center">
+            <CRow className="mt-3" cols={12}>
+              <CFormLabel>Chọn cửa hàng</CFormLabel>
+              <CFormSelect onChange={(e) => setSyncShopChoose(e.target.value)}>
+                <option value="">Chọn cửa hàng</option>
+                {shops.map((shop) => (
+                  <option value={shop.id}>{shop.name}</option>
+                ))}
+              </CFormSelect>
+            </CRow>
+          </CModalBody>
+          <CModalFooter className="d-flex justify-content-center">
+            <CButton color="primary" onClick={handleSyncShop}>
+              Sync
+            </CButton>
+            <CButton color="secondary" onClick={toggleSyncShop}>
+              Cancel
+            </CButton>
+          </CModalFooter>
+        </CModal>
       )}
     </>
   )
@@ -1127,28 +1254,6 @@ const ModalProduct = ({ type, visible, setVisible, product }) => {
         <CToastBody>{message}</CToastBody>
       </CToast>,
     )
-  }
-
-  const updateProduct = async (shopId) => {
-    try {
-      const payload = {
-        shopId: shopId,
-        originProduct: product,
-        title,
-        description,
-        images,
-      }
-
-      const res = await apiRequest.put(`/products/tiktok-product/${product.id}`, payload)
-      console.log(res)
-      if (res.data.message == 'Success') {
-        await apiRequest.get(`/shops/sync-products/${shopId}`)
-        handleShowToast('Cập nhật sản phẩm lên shop thành công!')
-        setVisible(false)
-      }
-    } catch (error) {
-      console.log(error)
-    }
   }
 
   return (
@@ -1279,40 +1384,6 @@ const ModalProduct = ({ type, visible, setVisible, product }) => {
         </CModalBody>
       </CModal>
     </>
-  )
-}
-
-const ModalDeleteProduct = ({ visible, setVisible, product }) => {
-  const deleteProduct = () => {
-    try {
-      apiRequest.delete('/products/' + product.id)
-      setVisible(false)
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  return (
-    <CModal
-      visible={visible}
-      onClose={() => setVisible(false)}
-      aria-labelledby="LiveDemoExampleLabel"
-    >
-      <CModalHeader>
-        <CModalTitle id="LiveDemoExampleLabel">Xác nhận xóa sản phẩm</CModalTitle>
-      </CModalHeader>
-      <CModalBody>
-        <p>Bấm xóa để tiếp tục</p>
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" onClick={() => setVisible(false)}>
-          Đóng
-        </CButton>
-        <CButton color="primary" onClick={() => deleteProduct()}>
-          Xóa
-        </CButton>
-      </CModalFooter>
-    </CModal>
   )
 }
 

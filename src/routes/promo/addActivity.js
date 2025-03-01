@@ -2,6 +2,7 @@ import {
   CButton,
   CCol,
   CForm,
+  CFormCheck,
   CFormInput,
   CFormLabel,
   CFormSelect,
@@ -27,8 +28,15 @@ import { ToastNoti } from '../../components/notification/ToastNoti'
 import CIcon from '@coreui/icons-react'
 import { cilBell } from '@coreui/icons'
 
-const ACTIVITY_TYPES = ['FIXED_PRICE', 'DIRECT_DISCOUNT', 'FLASHSALE']
-const PRODUCT_LEVEL = ['VARIATION']
+const ACTIVITY_TYPES = [
+  { value: 'FIXED_PRICE', label: 'Fixed Price' },
+  { value: 'DIRECT_DISCOUNT', label: 'Discount' },
+  { value: 'FLASHSALE', label: 'Flash Sale' },
+]
+const PRODUCT_LEVEL = [
+  { value: 'PRODUCT', label: 'Product level' },
+  { value: 'VARIATION', label: 'Variation level' },
+]
 const customTooltipStyle = {
   '--cui-tooltip-bg': 'var(--cui-primary)',
 }
@@ -113,8 +121,7 @@ const ModalContent = ({ onClose, onChangeActivityEvent }) => {
       })
 
       if (result.status === 200) {
-        onClose()
-        onChangeActivityEvent()
+        window.location.reload()
       }
     } catch (error) {
       handleShowToast(error.message)
@@ -158,22 +165,40 @@ const ModalContent = ({ onClose, onChangeActivityEvent }) => {
           />
         </CRow>
         <CRow>
-          <CFormLabel>Loại</CFormLabel>
-          <CFormSelect value={activityType} onChange={(e) => setActivityType(e.target.value)}>
-            <option>Chọn loại</option>
+          <CFormLabel>Discount type</CFormLabel>
+          <div className="form-check form-check-inline">
             {ACTIVITY_TYPES.map((item) => (
-              <option value={item}>{item}</option>
+              <div key={item.value} className="form-check form-check-inline">
+                <CFormCheck
+                  type="radio"
+                  name="activityType"
+                  value={item.value}
+                  id={`activityType-${item.value}`}
+                  checked={activityType === item.value}
+                  onChange={(e) => setActivityType(e.target.value)}
+                  label={item.label}
+                />
+              </div>
             ))}
-          </CFormSelect>
+          </div>
         </CRow>
         <CRow className="mt-3">
           <CFormLabel>Loại sản phẩm</CFormLabel>
-          <CFormSelect value={productLevel} onChange={(e) => setProductLevel(e.target.value)}>
-            <option>Chọn loại</option>
+          <div className="form-check form-check-inline">
             {PRODUCT_LEVEL.map((item) => (
-              <option value={item}>{item}</option>
+              <div key={item.value} className="form-check form-check-inline">
+                <CFormCheck
+                  type="radio"
+                  name="productLevel"
+                  value={item.value}
+                  id={`productLevel-${item.value}`}
+                  checked={productLevel === item.value}
+                  onChange={(e) => setProductLevel(e.target.value)}
+                  label={item.label}
+                />
+              </div>
             ))}
-          </CFormSelect>
+          </div>
         </CRow>
         <CRow className="mt-3">
           <CFormInput
