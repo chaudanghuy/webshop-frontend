@@ -734,7 +734,9 @@ const Acvitites = () => {
               ''
             )}
             {product.skus.map((sku) => (
-              <CListGroupItem>{sku.discount ? sku.discount + '%' : ''}</CListGroupItem>
+              <CListGroupItem>
+                {sku.activity_price ? sku.activity_price.amount : sku.discount}
+              </CListGroupItem>
             ))}
           </CListGroup>
         ) : (
