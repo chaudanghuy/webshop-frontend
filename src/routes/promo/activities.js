@@ -542,7 +542,11 @@ const Acvitites = () => {
             activity_id: response.data.activity_id,
             products: response.data.products,
           }
-          apiRequest.post(`/deals/activities`, payload2)
+          setTimeout(() => {
+            apiRequest.post(`/deals/activities`, payload2).then((res) => {
+              handleShowToast(res.data.message)
+            })
+          }, 5000)
         })
         .finally(() => {
           console.log('done')
