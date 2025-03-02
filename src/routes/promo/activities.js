@@ -451,7 +451,7 @@ const Acvitites = () => {
           }
           return oldProgress + 20
         })
-      }, 500)
+      }, 2000)
     } catch (error) {
       console.log(error)
     }
@@ -564,7 +564,7 @@ const Acvitites = () => {
           }
           return oldProgress + 20
         })
-      }, 500)
+      }, 5000)
     } catch (error) {
       console.log(error)
       setUpdatingFlashDeal(false)
@@ -734,9 +734,7 @@ const Acvitites = () => {
               ''
             )}
             {product.skus.map((sku) => (
-              <CListGroupItem>
-                {sku.id} - {sku.discount ? sku.discount + '%' : ''}
-              </CListGroupItem>
+              <CListGroupItem>{sku.discount ? sku.discount + '%' : ''}</CListGroupItem>
             ))}
           </CListGroup>
         ) : (
