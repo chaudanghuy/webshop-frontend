@@ -16,11 +16,14 @@ import {
   CForm,
   CFormCheck,
   CFormInput,
+  CFormLabel,
+  CFormSelect,
   CFormTextarea,
   CImage,
   CInputGroup,
   CModal,
   CModalBody,
+  CModalFooter,
   CModalHeader,
   CModalTitle,
   CProgress,
@@ -42,6 +45,7 @@ import DataTable from 'react-data-table-component'
 import UploadWidget from '../../components/uploadWidget/UploadWidget'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import { Edit, Trash2 } from 'lucide-react'
 
 const Orders = () => {
   // Enum
@@ -69,6 +73,15 @@ const Orders = () => {
   const [shops, setShops] = useState([])
 
   const [alert, setAlert] = useState('')
+
+  // Sync
+  const [isSyncWithShop, setIsSyncWithShop] = useState(false)
+  const [syncShopModal, setSyncShopModal] = useState(false)
+  const [syncShopChoose, setSyncShopChoose] = useState(false)
+
+  // Order detail
+  const [orderDetail, setOrderDetail] = useState(null)
+  const [orderDetailModal, setOrderDetailModal] = useState(false)
 
   const handleShowToast = (message) => {
     setToast(
@@ -182,12 +195,15 @@ const Orders = () => {
 
   const syncOrders = async () => {
     try {
-      const res = await apiRequest.get('/shops/sync-orders-all')
-      handleShowToast('Bắt đầu cập nhật đơn hàng!')
-      if (res.data.message) {
-        handleShowToast('Cập nhật đơn hàng lên shop thành công!')
-        window.location.reload()
-      }
+      setIsSyncWithShop(true)
+      setSyncShopModal(true)
+
+      // const res = await apiRequest.get('/shops/sync-orders-all')
+      // handleShowToast('Bắt đầu cập nhật đơn hàng!')
+      // if (res.data.message) {
+      //   handleShowToast('Cập nhật đơn hàng lên shop thành công!')
+      //   window.location.reload()
+      // }
     } catch (error) {
       console.log(error)
       handleShowToast('Đã có lỗi xảy ra. Xin vui lòng thử lại!')
@@ -216,6 +232,45 @@ const Orders = () => {
     setFilterStatus(selectedStatus)
   }
 
+  const toggleSyncShop = () => {
+    setIsSyncWithShop(!isSyncWithShop)
+    setSyncShopModal(!syncShopModal)
+  }
+
+  const handleSyncShop = async () => {
+    try {
+      if (!syncShopChoose) {
+        handleShowToast('Vui lồng chọn cửa hàng để sync!')
+        return
+      }
+
+      const syncShop = shops.find((shop) => shop.id == syncShopChoose)
+
+      apiRequest.get(`/shops/sync-orders/${syncShop.id}`).then((res) => {
+        handleShowToast(`Sync order của shop ${syncShop.name} thành công!`)
+        toggleSyncShop()
+        setOrders([])
+        fetchOrders()
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const getOrderDetail = async (row) => {
+    try {
+      await apiRequest.get(`/orders/tiktok/${row.shopId}/${row.id}`).then((res) => {
+        console.log(res.data.order.orders[0])
+        setOrderDetail(res.data.order.orders[0])
+        setOrderDetailModal(true)
+      })
+    } catch (error) {}
+  }
+
+  const toggleOrderModal = () => {
+    setOrderDetailModal(!orderDetailModal)
+  }
+
   const columns = [
     {
       name: <CFormCheck checked={selectAll} onChange={() => setSelectAll(!selectAll)} />,
@@ -233,7 +288,7 @@ const Orders = () => {
       ),
       width: '50px',
     },
-    { name: 'Order', selector: (row) => row.id, sortable: true, width: '150px' },
+    { name: 'Order', selector: (row) => row.id, sortable: true, width: '200px' },
     {
       name: 'Items',
       cell: (row) => (
@@ -280,6 +335,17 @@ const Orders = () => {
         </div>
       ),
       width: '250px',
+    },
+    {
+      name: 'Actions',
+      cell: (row) => (
+        <div className="d-flex flex-row items-center">
+          <CButton size="icon" variant="ghost" onClick={() => getOrderDetail(row)}>
+            <Edit className="w-4 h-4" />
+          </CButton>
+        </div>
+      ),
+      width: '150px',
     },
   ]
 
@@ -402,6 +468,98 @@ const Orders = () => {
           </CCard>
         </CCol>
       </CRow>
+      {isSyncWithShop && (
+        <CModal visible={syncShopModal} onClose={toggleSyncShop}>
+          <CModalHeader closeButton>Sync Đơn Hàng</CModalHeader>
+          <CModalBody className="d-flex justify-content-center">
+            <CRow className="mt-3" cols={12}>
+              <CFormLabel>Chọn cửa hàng</CFormLabel>
+              <CFormSelect onChange={(e) => setSyncShopChoose(e.target.value)}>
+                <option value="">Chọn cửa hàng</option>
+                {shops.map((shop) => (
+                  <option value={shop.id}>{shop.name}</option>
+                ))}
+              </CFormSelect>
+            </CRow>
+          </CModalBody>
+          <CModalFooter className="d-flex justify-content-center">
+            <CButton color="primary" onClick={handleSyncShop}>
+              Sync
+            </CButton>
+            <CButton color="secondary" onClick={toggleSyncShop}>
+              Cancel
+            </CButton>
+          </CModalFooter>
+        </CModal>
+      )}
+      {orderDetailModal && (
+        <CModal visible={orderDetailModal} onClose={toggleOrderModal}>
+          <CModalHeader closeButton>Đơn hàng #{orderDetail.id}</CModalHeader>
+          <CModalBody className="d-flex flex-column">
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Buyer email"
+                value={orderDetail.buyer_email}
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Buyer message"
+                value={orderDetail.buyer_message}
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Receiver name"
+                value={orderDetail.recipient_address.name}
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Receiver Address"
+                value={orderDetail.recipient_address.full_address}
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Receiver phone"
+                value={orderDetail.recipient_address.phone_number}
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Shipping Provider"
+                value={orderDetail.shipping_provider}
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Delivery Instruction"
+                value={orderDetail.delivery_instruction}
+                disabled
+              />
+            </CRow>
+          </CModalBody>
+          <CModalFooter className="d-flex justify-content-center">
+            <CButton color="secondary" onClick={toggleOrderModal}>
+              OK
+            </CButton>
+          </CModalFooter>
+        </CModal>
+      )}
     </>
   )
 }
