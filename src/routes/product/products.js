@@ -23,6 +23,7 @@ import {
   CLink,
   CModal,
   CModalBody,
+  CModalFooter,
   CModalHeader,
   CModalTitle,
   CProgress,
@@ -109,6 +110,11 @@ const Products = () => {
   const [discountPriceList, setDiscountPriceList] = useState([])
 
   const [alert, setAlert] = useState('')
+
+  // Sync
+  const [isSyncWithShop, setIsSyncWithShop] = useState(false)
+  const [syncShopModal, setSyncShopModal] = useState(false)
+  const [syncShopChoose, setSyncShopChoose] = useState(false)
 
   // Enums
   const StatusEnum = {
@@ -462,8 +468,34 @@ const Products = () => {
 
   const syncProducts = async () => {
     try {
-      apiRequest.get('/shops/sync-products-all').then((res) => {
-        handleShowToast('Sync sản phẩm thành công!')
+      setIsSyncWithShop(true)
+      setSyncShopModal(true)
+
+      // apiRequest.get('/shops/sync-products-all').then((res) => {
+      //   handleShowToast('Sync sản phẩm thành công!')
+      //   window.location.reload()
+      // })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const toggleSyncShop = () => {
+    setIsSyncWithShop(!isSyncWithShop)
+    setSyncShopModal(!syncShopModal)
+  }
+
+  const handleSyncShop = async () => {
+    try {
+      if (!syncShopChoose) {
+        handleShowToast('Vui lồng chọn cửa hàng để sync!')
+        return
+      }
+
+      const syncShop = shops.find((shop) => shop.id == syncShopChoose)
+
+      apiRequest.get(`/shops/sync-products/${syncShop.id}`).then((res) => {
+        handleShowToast(`Sync sản phẩm của shop ${syncShop.name} thành công!`)
         window.location.reload()
       })
     } catch (error) {
@@ -1009,6 +1041,30 @@ const Products = () => {
             </CFooter>
           </CModal>
         </div>
+      )}
+      {isSyncWithShop && (
+        <CModal visible={syncShopModal} onClose={toggleSyncShop}>
+          <CModalHeader closeButton>Sync Đơn Hàng</CModalHeader>
+          <CModalBody className="d-flex justify-content-center">
+            <CRow className="mt-3" cols={12}>
+              <CFormLabel>Chọn cửa hàng</CFormLabel>
+              <CFormSelect onChange={(e) => setSyncShopChoose(e.target.value)}>
+                <option value="">Chọn cửa hàng</option>
+                {shops.map((shop) => (
+                  <option value={shop.id}>{shop.name}</option>
+                ))}
+              </CFormSelect>
+            </CRow>
+          </CModalBody>
+          <CModalFooter className="d-flex justify-content-center">
+            <CButton color="primary" onClick={handleSyncShop}>
+              Sync
+            </CButton>
+            <CButton color="secondary" onClick={toggleSyncShop}>
+              Cancel
+            </CButton>
+          </CModalFooter>
+        </CModal>
       )}
     </>
   )
