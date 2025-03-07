@@ -539,6 +539,28 @@ const Orders = () => {
             <CRow className="mt-3 mx-3" cols={12}>
               <CFormTextarea
                 type="text"
+                label="Postal Code"
+                value={orderDetail.recipient_address.postal_code}
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
+                label="Fullfillment Type"
+                value={
+                  orderDetail.fulfillment_type == 'FULFILLMENT_BY_SELLER'
+                    ? 'SELLER'
+                    : orderDetail.fulfillment_type == 'FULFILLMENT_BY_TIKTOK'
+                      ? 'TIKTOK'
+                      : 'OTHER'
+                }
+                disabled
+              />
+            </CRow>
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormTextarea
+                type="text"
                 label="Shipping Provider"
                 value={orderDetail.shipping_provider}
                 disabled
@@ -548,7 +570,11 @@ const Orders = () => {
               <CFormTextarea
                 type="text"
                 label="Delivery Instruction"
-                value={orderDetail.delivery_instruction}
+                value={
+                  orderDetail.delivery_type == 'HOME_DELIVERY'
+                    ? 'Giao hàng tận nhà'
+                    : 'Giao hàng tận cửa'
+                }
                 disabled
               />
             </CRow>
