@@ -358,6 +358,8 @@ const AddTemplate = () => {
     try {
       const formData = new FormData(e.target)
 
+      const poundToKg = convertToKg(formData.get('packageWeightValue'))
+
       const payload = {
         name: formData.get('name'),
         type: formData.get('type'),
@@ -374,7 +376,7 @@ const AddTemplate = () => {
         sellerSku: sellerSku,
         isSale: isSale,
         isCOD: isCOD,
-        packageWeightValue: formData.get('packageWeightValue'),
+        packageWeightValue: poundToKg,
         packageDimensionLength: packageDimensionLength,
         packageDimensionWidth: packageDimensionWidth,
         packageDimensionHeight: packageDimensionHeight,
@@ -390,6 +392,11 @@ const AddTemplate = () => {
       setErrorMessage(error.response.data.message)
       console.error('Error adding template:', error)
     }
+  }
+
+  const convertToKg = (lbs) => {
+    const kg = lbs * 0.453592
+    setKilograms(kg.toFixed(2)) // Làm tròn 2 số thập phân
   }
 
   return (
@@ -658,7 +665,7 @@ const AddTemplate = () => {
                       type="number"
                       id="packageWeightValue"
                       name="packageWeightValue"
-                      label="Trọng lượng gói hàng (KILOGRAM)*"
+                      label="Trọng lượng gói hàng (POUNDS)*"
                       required
                     />
                   </CCol>
