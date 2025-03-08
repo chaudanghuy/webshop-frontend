@@ -237,7 +237,7 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
         const res = await apiRequest.get(`/products/warehouse/${firstShop.id}`)
 
         console.log(res.data.result.data.warehouses)
-        setWarehouses(res.data.warehouses)
+        setWarehouses(res.data.result.data.warehouses)
       } catch (error) {
         console.log(error)
       }
@@ -380,14 +380,16 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
               </CRow>
               <CRow className="mt-3">
                 <CFormLabel>Warehouse</CFormLabel>
-                <CFormSelect onChange={(e) => setSelectedWarehouse(e.target.value)}>
-                  {warehouses &&
-                    warehouses.map((warehouse, index) => (
-                      <option key={index} value={warehouse.id}>
-                        {warehouse.name}
-                      </option>
-                    ))}
-                </CFormSelect>
+                {warehouses && (
+                  <CFormSelect onChange={(e) => setSelectedWarehouse(e.target.value)}>
+                    {warehouses &&
+                      warehouses.map((warehouse, index) => (
+                        <option key={index} value={warehouse.id}>
+                          {warehouse.name}
+                        </option>
+                      ))}
+                  </CFormSelect>
+                )}
               </CRow>
             </div>
             <div className="column product-list">
