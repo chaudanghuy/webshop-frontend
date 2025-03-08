@@ -211,12 +211,9 @@ const Acvitites = () => {
       setProducts(tempProducts)
       return
     }
-    const dealSearchProductIDsArr = dealSearchProductIDs.split(',')
-    setDealSearchProductIDsArray(dealSearchProductIDsArr)
-    // convert dealSearchProductIDs to array
-    const filterProducts = products.filter((product) =>
-      dealSearchProductIDsArr.includes(product.id),
-    )
+    const dealProducts2Arr = dealSearchProductIDs.split(',').map((id) => id.trim())
+    setDealSearchProductIDsArray(dealProducts2Arr)
+    const filterProducts = products.filter((product) => dealProducts2Arr.includes(product.id))
     setProducts(filterProducts)
   }, [dealSearchProductIDs])
 
@@ -290,7 +287,6 @@ const Acvitites = () => {
             shopId: activity.shopId,
           })
           .then((res) => {
-            // console.log(res.data);
             setModalData(res.data)
           })
         setVisible(true)
@@ -322,7 +318,6 @@ const Acvitites = () => {
   const fetchDeal = async (shopId, dealId) => {
     try {
       const res = await apiRequest.get(`/deals/shop/${shopId}/promo/${dealId}`)
-      console.log(res.data)
       setDetailFlashDeal(res.data)
       const flashDeal = res.data
       setDealShopId(shopId)
@@ -436,7 +431,6 @@ const Acvitites = () => {
         products: skus,
         percentage: percentage,
       })
-      // console.log(resp.data);
       if (resp.data) {
         handleShowToast('Update price thành công!')
       }
@@ -530,7 +524,7 @@ const Acvitites = () => {
         }
       }
 
-      console.log(payload)
+      // console.log(payload)
 
       const resp = await apiRequest
         .post('/deals', payload)
