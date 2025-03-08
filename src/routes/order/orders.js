@@ -46,6 +46,7 @@ import UploadWidget from '../../components/uploadWidget/UploadWidget'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import { Edit, Trash2 } from 'lucide-react'
+import moment from 'moment-timezone'
 
 const Orders = () => {
   // Enum
@@ -129,6 +130,10 @@ const Orders = () => {
   useEffect(() => {
     filterOrders()
   }, [filterSearch, filterDateFrom, filterDateTo, filterShops, filterStatus, sortBy])
+
+  const formatDateTimeDisplay = (timestamp) => {
+    return moment.unix(timestamp).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm A')
+  }
 
   const filterOrders = () => {
     let filtered = noneFilterOrders
@@ -494,89 +499,81 @@ const Orders = () => {
       )}
       {orderDetailModal && (
         <CModal visible={orderDetailModal} onClose={toggleOrderModal}>
-          <CModalHeader closeButton>Đơn hàng #{orderDetail.id}</CModalHeader>
+          <CModalHeader closeButton>Đơn hàng #{orderDetail.id} </CModalHeader>
           <CModalBody className="d-flex flex-column">
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Buyer email"
-                value={orderDetail.buyer_email}
-                disabled
-              />
+              <CCol className="d-flex justify-content-center" cols={3}>
+                {orderDetail.paid_time ? (
+                  <CBadge color="success">Đã thanh toán</CBadge>
+                ) : (
+                  <CBadge color="warning">Unpaid</CBadge>
+                )}
+              </CCol>
+              <CCol className="d-flex justify-content-center" cols={3}>
+                <CBadge color="info">{orderDetail.delivery_option_name}</CBadge>
+              </CCol>
+              <CCol className="d-flex justify-content-center" cols={3}>
+                <CBadge color="warning">
+                  {formatDateTimeDisplay(orderDetail.cancel_order_sla_time)}
+                </CBadge>
+              </CCol>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Buyer message"
-                value={orderDetail.buyer_message}
-                disabled
-              />
+              <CFormLabel>Name</CFormLabel>
+              <code>{orderDetail.recipient_address.name}</code>
+            </CRow>
+            <hr className="w-100" />
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormLabel>Address</CFormLabel>
+              <code>{orderDetail.recipient_address.full_address}</code>
+              <br />
+              <CFormLabel>Zip Code</CFormLabel>
+              <code>{orderDetail.recipient_address.postal_code}</code>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Receiver name"
-                value={orderDetail.recipient_address.name}
-                disabled
-              />
+              <CFormLabel>Phone</CFormLabel>
+              <code>{orderDetail.recipient_address.phone_number}</code>
+            </CRow>
+            <hr className="w-100" />
+            <CRow className="mt-3 mx-3" cols={12}>
+              <CFormLabel>Tracking Number</CFormLabel>
+              <code>{orderDetail.tracking_number}</code>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Receiver Address"
-                value={orderDetail.recipient_address.full_address}
-                disabled
-              />
+              <CFormLabel>Fulfillment Type</CFormLabel>
+              <code>
+                {orderDetail.fulfillment_type == 'FULFILLMENT_BY_SELLER'
+                  ? 'SELLER'
+                  : orderDetail.fulfillment_type == 'FULFILLMENT_BY_TIKTOK'
+                    ? 'TIKTOK'
+                    : 'OTHER'}
+              </code>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Receiver phone"
-                value={orderDetail.recipient_address.phone_number}
-                disabled
-              />
+              <CFormLabel>Shipping Provider</CFormLabel>
+              <code>{orderDetail.shipping_provider}</code>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Postal Code"
-                value={orderDetail.recipient_address.postal_code}
-                disabled
-              />
+              <CFormLabel>Đơn hàng phải được giao trước thời gian này</CFormLabel>
+              <code>
+                {formatDateTimeDisplay(orderDetail.delivery_option_required_delivery_time)}
+              </code>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Fullfillment Type"
-                value={
-                  orderDetail.fulfillment_type == 'FULFILLMENT_BY_SELLER'
-                    ? 'SELLER'
-                    : orderDetail.fulfillment_type == 'FULFILLMENT_BY_TIKTOK'
-                      ? 'TIKTOK'
-                      : 'OTHER'
-                }
-                disabled
-              />
+              <CFormLabel>Thời gian giao hàng dự kiến</CFormLabel>
+              <code>{formatDateTimeDisplay(orderDetail.rts_sla_time)}</code>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Shipping Provider"
-                value={orderDetail.shipping_provider}
-                disabled
-              />
+              <CFormLabel>Delivery Instruction</CFormLabel>
+              <code>
+                {orderDetail.delivery_type == 'HOME_DELIVERY'
+                  ? 'Giao hàng tận nhà'
+                  : 'Giao hàng tận cửa'}
+              </code>
             </CRow>
             <CRow className="mt-3 mx-3" cols={12}>
-              <CFormTextarea
-                type="text"
-                label="Delivery Instruction"
-                value={
-                  orderDetail.delivery_type == 'HOME_DELIVERY'
-                    ? 'Giao hàng tận nhà'
-                    : 'Giao hàng tận cửa'
-                }
-                disabled
-              />
+              <CFormLabel>Buyer message</CFormLabel>
+              <code>{orderDetail.buyer_message}</code>
             </CRow>
           </CModalBody>
           <CModalFooter className="d-flex justify-content-center">
