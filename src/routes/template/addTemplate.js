@@ -82,6 +82,11 @@ const AddTemplate = () => {
   // Dynamic Form Fields
   const [formFields, setFormFields] = useState([])
 
+  // Package
+  const [packageDimensionLength, setPackageDimensionLength] = useState(10)
+  const [packageDimensionWidth, setPackageDimensionWidth] = useState(10)
+  const [packageDimensionHeight, setPackageDimensionHeight] = useState(10)
+
   const handleFieldChange = (fieldKey, value) => {
     const isExisting = formFields.some((item) => item.id === fieldKey)
     if (!isExisting) {
@@ -370,9 +375,9 @@ const AddTemplate = () => {
         isSale: isSale,
         isCOD: isCOD,
         packageWeightValue: formData.get('packageWeightValue'),
-        packageDimensionLength: formData.get('packageDimensionLength'),
-        packageDimensionWidth: formData.get('packageDimensionWidth'),
-        packageDimensionHeight: formData.get('packageDimensionHeight'),
+        packageDimensionLength: packageDimensionLength,
+        packageDimensionWidth: packageDimensionWidth,
+        packageDimensionHeight: packageDimensionHeight,
       }
 
       //   console.log(payload)
@@ -685,7 +690,8 @@ const AddTemplate = () => {
                       id="packageDimensionLength"
                       name="packageDimensionLength"
                       label="Kích thước chiều dài gói hàng (CENTIMETER) "
-                      value="10"
+                      value={packageDimensionLength}
+                      onChange={(e) => setPackageDimensionLength(e.target.value)}
                       required
                     />
                   </CCol>
@@ -695,7 +701,8 @@ const AddTemplate = () => {
                       id="packageDimensionWidth"
                       name="packageDimensionWidth"
                       label="Kích thước chiều rộng gói hàng (CENTIMETER)"
-                      value="10"
+                      value={packageDimensionWidth}
+                      onChange={(e) => setPackageDimensionWidth(e.target.value)}
                       required
                     />
                   </CCol>
@@ -705,7 +712,8 @@ const AddTemplate = () => {
                       id="packageDimensionHeight"
                       name="packageDimensionHeight"
                       label="Kích thước chiều cao gói hàng (CENTIMETER)"
-                      value="10"
+                      value={packageDimensionHeight}
+                      onChange={(e) => setPackageDimensionHeight(e.target.value)}
                       required
                     />
                   </CCol>
