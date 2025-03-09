@@ -307,6 +307,10 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
 
   const uploadTiktokProducts = async () => {
     try {
+      if (!selectedWarehouse) {
+        handleShowToast('Vui lòng chọn kho')
+        return
+      }
       // initial state for upload, should reset all fields
       setUploadBtnStatus(true)
       setProgress(0)
