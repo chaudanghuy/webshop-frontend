@@ -382,6 +382,7 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
                 <CFormLabel>Warehouse</CFormLabel>
                 {warehouses && (
                   <CFormSelect onChange={(e) => setSelectedWarehouse(e.target.value)}>
+                    <option value="">--Chọn --</option>
                     {warehouses &&
                       warehouses.map((warehouse, index) => (
                         <option key={index} value={warehouse.id}>
