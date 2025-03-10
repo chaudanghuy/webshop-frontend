@@ -376,10 +376,10 @@ const AddTemplate = () => {
         sellerSku: sellerSku,
         isSale: isSale,
         isCOD: isCOD,
-        packageWeightValue: poundToKg,
-        packageDimensionLength: packageDimensionLength,
-        packageDimensionWidth: packageDimensionWidth,
-        packageDimensionHeight: packageDimensionHeight,
+        packageWeightValue: poundToKg.toString(),
+        packageDimensionLength: packageDimensionLength.toString(),
+        packageDimensionWidth: packageDimensionWidth.toString(),
+        packageDimensionHeight: packageDimensionHeight.toString(),
       }
 
       //   console.log(payload)
@@ -396,7 +396,7 @@ const AddTemplate = () => {
 
   const convertToKg = (lbs) => {
     const kg = lbs * 0.453592
-    setKilograms(kg.toFixed(2)) // Làm tròn 2 số thập phân
+    return kg.toFixed(2)
   }
 
   return (
