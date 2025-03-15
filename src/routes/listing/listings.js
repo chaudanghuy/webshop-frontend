@@ -34,6 +34,7 @@ import {
   CPaginationItem,
   CProgress,
   CRow,
+  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -608,7 +609,7 @@ const Listings = () => {
                         <CCollapse visible={openItems[item.id]}>
                           <CCard className="mt-2">
                             <CCardBody>
-                              {listingOnShops &&
+                              {listingOnShops ? (
                                 listingOnShops.map((los) =>
                                   los.listingId === item.id ? (
                                     <>
@@ -634,7 +635,10 @@ const Listings = () => {
                                       <hr />
                                     </>
                                   ) : null,
-                                )}
+                                )
+                              ) : (
+                                <CSpinner color="primary" />
+                              )}
                             </CCardBody>
                           </CCard>
                         </CCollapse>
