@@ -358,7 +358,7 @@ const AddTemplate = () => {
     try {
       const formData = new FormData(e.target)
 
-      const poundToKg = convertToGam(formData.get('packageWeightValue'))
+      const poundToKg = convertToKg(formData.get('packageWeightValue'))
 
       const payload = {
         name: formData.get('name'),
@@ -394,8 +394,8 @@ const AddTemplate = () => {
     }
   }
 
-  const convertToGam = (lbs) => {
-    const kg = lbs * 453.592
+  const convertToKg = (lbs) => {
+    const kg = lbs * 0.453592
     return kg.toFixed(2)
   }
 
