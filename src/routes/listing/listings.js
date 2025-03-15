@@ -609,7 +609,7 @@ const Listings = () => {
                         <CCollapse visible={openItems[item.id]}>
                           <CCard className="mt-2">
                             <CCardBody>
-                              {listingOnShops ? (
+                              {listingOnShops.length > 0 ? (
                                 listingOnShops.map((los) =>
                                   los.listingId === item.id ? (
                                     <>
@@ -637,7 +637,10 @@ const Listings = () => {
                                   ) : null,
                                 )
                               ) : (
-                                <CSpinner color="primary" />
+                                <>
+                                  <CSpinner color="primary" />
+                                  Loading..
+                                </>
                               )}
                             </CCardBody>
                           </CCard>
