@@ -12,6 +12,7 @@ import {
   CCardHeader,
   CCardImage,
   CCol,
+  CCollapse,
   CDropdown,
   CDropdownDivider,
   CDropdownItem,
@@ -85,10 +86,9 @@ import CrawlListing from './crawlListing'
 import ViewListing from './viewListing'
 import EditListing from './editListing'
 import UploadToShop from './uploadToShop'
-import { useNavigate } from 'react-router-dom'
-import MultiSelect from 'multiselect-react-dropdown'
 import { format } from 'timeago.js'
 import { ToastNoti } from '../../components/notification/ToastNoti'
+import { ListTree } from 'lucide-react'
 
 const Listings = () => {
   // enum
@@ -394,6 +394,14 @@ const Listings = () => {
     setPage(1)
   }
 
+  const [openItems, setOpenItems] = useState({})
+  const toggleItem = (id) => {
+    setOpenItems((prev) => ({
+      ...prev,
+      [id]: !prev[id], // Toggle the clicked item
+    }))
+  }
+
   return (
     <>
       <ToastNoti toast={toast} setToast={setToast} />
@@ -594,33 +602,42 @@ const Listings = () => {
                         <div>{format(item.updatedAt)}</div>
                       </CTableDataCell>
                       <CTableDataCell className="text-center">
-                        {listingOnShops &&
-                          listingOnShops.map((los) =>
-                            los.listingId === item.id ? (
-                              <>
-                                <div
-                                  key={los.id}
-                                  className="d-flex flex-row justify-content-between "
-                                >
-                                  <div className="p-2">{los.shop.name}</div>
-                                  <div className="p-2">{format(los.createdAt)}</div>
-                                  <div className="p-2">
-                                    {los.status === 'FAILURE' ? (
-                                      <>
-                                        <CBadge color="danger">{los.status}</CBadge>
-                                        <CLink color="info" href="#" target="_blank">
-                                          <CIcon icon={cilReload} className="me-2" />
-                                        </CLink>
-                                      </>
-                                    ) : (
-                                      <CBadge color="warning">{los.status}</CBadge>
-                                    )}
-                                  </div>
-                                </div>
-                                <hr />
-                              </>
-                            ) : null,
-                          )}
+                        <CButton color="warning" onClick={() => toggleItem(item.id)}>
+                          <ListTree className="ms-2" /> Lịch sử
+                        </CButton>
+                        <CCollapse visible={openItems[item.id]}>
+                          <CCard className="mt-2">
+                            <CCardBody>
+                              {listingOnShops &&
+                                listingOnShops.map((los) =>
+                                  los.listingId === item.id ? (
+                                    <>
+                                      <div
+                                        key={los.id}
+                                        className="d-flex flex-row justify-content-between "
+                                      >
+                                        <div className="p-2">{los.shop.name}</div>
+                                        <div className="p-2">{format(los.createdAt)}</div>
+                                        <div className="p-2">
+                                          {los.status === 'FAILURE' ? (
+                                            <>
+                                              <CBadge color="danger">{los.status}</CBadge>
+                                              <CLink color="info" href="#" target="_blank">
+                                                <CIcon icon={cilReload} className="me-2" />
+                                              </CLink>
+                                            </>
+                                          ) : (
+                                            <CBadge color="warning">{los.status}</CBadge>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <hr />
+                                    </>
+                                  ) : null,
+                                )}
+                            </CCardBody>
+                          </CCard>
+                        </CCollapse>
                       </CTableDataCell>
                       <CTableDataCell className="text-center d-none d-md-table-cell">
                         <CButton
