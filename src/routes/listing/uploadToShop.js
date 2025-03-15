@@ -165,6 +165,7 @@ const ChooseTemplate = ({
               <CFormLabel>Chọn cửa hàng</CFormLabel>
               <MultiSelect
                 displayValue="name"
+                selectionLimit={1}
                 options={shops}
                 onSelect={onSelectShops}
                 onRemove={onSelectShops}
@@ -316,24 +317,24 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
       setProgress(0)
       setIsUploading(true)
 
-      const res = await apiRequest.post(
-        '/products/upload-to-tiktok',
-        {
-          listings: selectedListings,
-          shops: step2Shops,
-          template: step2Template,
-          warehouse: selectedWarehouse,
-          draftMode,
-        },
-        {
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            setProgress(percentCompleted)
-          },
-        },
-      )
+      const payload = {
+        listings: selectedListings,
+        shops: step2Shops,
+        template: step2Template,
+        warehouse: selectedWarehouse,
+        draftMode,
+      }
 
-      console.log(res)
+      console.log(payload)
+
+      const res = await apiRequest.post('/products/upload-to-tiktok', payload, {
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          setProgress(percentCompleted)
+        },
+      })
+
+      // console.log(res)
       if (res.data.message === 'Success') {
         handleShowToast('Đăng sản phẩm thành công!')
 

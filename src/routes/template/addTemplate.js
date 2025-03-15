@@ -358,7 +358,7 @@ const AddTemplate = () => {
     try {
       const formData = new FormData(e.target)
 
-      const poundToKg = convertToKg(formData.get('packageWeightValue'))
+      const poundToKg = convertToGam(formData.get('packageWeightValue'))
 
       const payload = {
         name: formData.get('name'),
@@ -394,8 +394,8 @@ const AddTemplate = () => {
     }
   }
 
-  const convertToKg = (lbs) => {
-    const kg = lbs * 0.453592
+  const convertToGam = (lbs) => {
+    const kg = lbs * 453.592
     return kg.toFixed(2)
   }
 
@@ -662,7 +662,7 @@ const AddTemplate = () => {
                 <div className="row g-3">
                   <CCol md={4}>
                     <CFormInput
-                      type="number"
+                      type="string"
                       id="packageWeightValue"
                       name="packageWeightValue"
                       label="Trọng lượng gói hàng (POUNDS)*"
