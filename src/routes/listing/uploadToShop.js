@@ -325,8 +325,6 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
         draftMode,
       }
 
-      console.log(payload)
-
       const res = await apiRequest.post('/products/upload-to-tiktok', payload, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)

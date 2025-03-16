@@ -491,8 +491,21 @@ const Products = () => {
         handleShowToast('Vui lồng chọn cửa hàng để sync!')
         return
       }
+      setProgress(0)
 
       const syncShop = shops.find((shop) => shop.id == syncShopChoose)
+
+      let progressInterval = setInterval(() => {
+        setProgress((oldProgress) => {
+          if (oldProgress >= 100) {
+            clearInterval(progressInterval)
+            setUpdating(false)
+            closeModal()
+            return 100
+          }
+          return oldProgress + 20
+        })
+      }, 500)
 
       apiRequest.get(`/shops/sync-products/${syncShop.id}`).then((res) => {
         handleShowToast(`Sync sản phẩm của shop ${syncShop.name} thành công!`)
@@ -1044,7 +1057,7 @@ const Products = () => {
       )}
       {isSyncWithShop && (
         <CModal visible={syncShopModal} onClose={toggleSyncShop}>
-          <CModalHeader closeButton>Sync Đơn Hàng</CModalHeader>
+          <CModalHeader closeButton>Sync Sản Phẩm</CModalHeader>
           <CModalBody className="d-flex justify-content-center">
             <CRow className="mt-3" cols={12}>
               <CFormLabel>Chọn cửa hàng</CFormLabel>
@@ -1057,12 +1070,18 @@ const Products = () => {
             </CRow>
           </CModalBody>
           <CModalFooter className="d-flex justify-content-center">
-            <CButton color="primary" onClick={handleSyncShop}>
-              Sync
-            </CButton>
-            <CButton color="secondary" onClick={toggleSyncShop}>
-              Cancel
-            </CButton>
+            {progress > 0 ? (
+              <div>Đang thực hiện tiến trình ..</div>
+            ) : (
+              <>
+                <CButton color="primary" onClick={handleSyncShop}>
+                  Sync
+                </CButton>
+                <CButton color="secondary" onClick={toggleSyncShop}>
+                  Cancel
+                </CButton>
+              </>
+            )}
           </CModalFooter>
         </CModal>
       )}
