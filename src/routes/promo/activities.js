@@ -608,9 +608,12 @@ const Acvitites = () => {
         return
       }
 
+      setProgress(10)
+
       const syncShop = shops.find((shop) => shop.id == syncShopChoose)
 
       apiRequest.get(`/shops/sync-promo/${syncShop.id}`).then((res) => {
+        setProgress(0)
         handleShowToast(`Sync promo của shop ${syncShop.name} thành công!`)
         toggleSyncShop()
         setActivities([])
@@ -1175,12 +1178,18 @@ const Acvitites = () => {
             </CRow>
           </CModalBody>
           <CModalFooter className="d-flex justify-content-center">
-            <CButton color="primary" onClick={handleSyncShop}>
-              Sync
-            </CButton>
-            <CButton color="secondary" onClick={toggleSyncShop}>
-              Cancel
-            </CButton>
+            {progress > 0 ? (
+              <div>Đang thực hiện tiến trình ..</div>
+            ) : (
+              <>
+                <CButton color="primary" onClick={handleSyncShop}>
+                  Sync
+                </CButton>
+                <CButton color="secondary" onClick={toggleSyncShop}>
+                  Cancel
+                </CButton>
+              </>
+            )}
           </CModalFooter>
         </CModal>
       )}

@@ -74,6 +74,7 @@ const Orders = () => {
   const [shops, setShops] = useState([])
 
   const [alert, setAlert] = useState('')
+  const [progress, setProgress] = useState(0)
 
   // Sync
   const [isSyncWithShop, setIsSyncWithShop] = useState(false)
@@ -248,10 +249,12 @@ const Orders = () => {
         handleShowToast('Vui lồng chọn cửa hàng để sync!')
         return
       }
+      setProgress(10)
 
       const syncShop = shops.find((shop) => shop.id == syncShopChoose)
 
       apiRequest.get(`/shops/sync-orders/${syncShop.id}`).then((res) => {
+        setProgress(0)
         handleShowToast(`Sync order của shop ${syncShop.name} thành công!`)
         toggleSyncShop()
         setOrders([])
@@ -488,12 +491,18 @@ const Orders = () => {
             </CRow>
           </CModalBody>
           <CModalFooter className="d-flex justify-content-center">
-            <CButton color="primary" onClick={handleSyncShop}>
-              Sync
-            </CButton>
-            <CButton color="secondary" onClick={toggleSyncShop}>
-              Cancel
-            </CButton>
+            {progress > 0 ? (
+              <diV>Đang sync..</diV>
+            ) : (
+              <>
+                <CButton color="primary" onClick={handleSyncShop}>
+                  Sync
+                </CButton>
+                <CButton color="secondary" onClick={toggleSyncShop}>
+                  Cancel
+                </CButton>
+              </>
+            )}
           </CModalFooter>
         </CModal>
       )}
