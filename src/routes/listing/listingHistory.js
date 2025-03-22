@@ -30,6 +30,7 @@ const ListingHistory = ({ visible, history }) => {
               <CTableHeaderCell scope="col">Shop</CTableHeaderCell>
               <CTableHeaderCell scope="col">Thời gian</CTableHeaderCell>
               <CTableHeaderCell scope="col">Tình trạng</CTableHeaderCell>
+              <CTableHeaderCell scope="col">Code</CTableHeaderCell>
               <CTableHeaderCell scope="col">Chi tiết</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
@@ -48,7 +49,8 @@ const ListingHistory = ({ visible, history }) => {
                       <CBadge color="warning">{item.status}</CBadge>
                     )}
                   </CTableDataCell>
-                  <CTableDataCell>{item.log && item.log.status}</CTableDataCell>
+                  <CTableDataCell>{item.code}</CTableDataCell>
+                  <CTableDataCell>{item.message}</CTableDataCell>
                 </CTableRow>
               ))
             ) : (
