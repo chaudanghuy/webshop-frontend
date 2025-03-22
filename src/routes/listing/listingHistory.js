@@ -6,6 +6,7 @@ import {
   CModalFooter,
   CModalHeader,
   CModalTitle,
+  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -14,6 +15,7 @@ import {
   CTableRow,
 } from '@coreui/react'
 import React from 'react'
+import { format } from 'timeago.js'
 
 const ListingHistory = ({ visible, history }) => {
   return (
@@ -32,8 +34,7 @@ const ListingHistory = ({ visible, history }) => {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {history &&
-              history.length > 0 &&
+            {history.length > 0 ? (
               history.map((item) => (
                 <CTableRow key={item.id}>
                   <CTableDataCell>{item.shop.name}</CTableDataCell>
@@ -49,7 +50,13 @@ const ListingHistory = ({ visible, history }) => {
                   </CTableDataCell>
                   <CTableDataCell>{item.log && item.log.status}</CTableDataCell>
                 </CTableRow>
-              ))}
+              ))
+            ) : (
+              <>
+                <CSpinner color="primary" />
+                Loading..
+              </>
+            )}
           </CTableBody>
         </CTable>
       </CModalBody>
