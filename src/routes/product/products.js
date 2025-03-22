@@ -184,7 +184,12 @@ const Products = () => {
       try {
         const res = await apiRequest.get('/products/json')
 
-        // console.log(res.data.products);
+        if (res.data.total == 0) {
+          handleShowToast('Đang cập nhật dữ liệu...')
+          // fetch products and refresh page
+          const res = await apiRequest.get('/shops/sync-initial-products')
+          window.location.reload()
+        }
         setTotal(res.data.total)
         setFilteredProducts(res.data.products)
         setLoading(false)
@@ -470,11 +475,6 @@ const Products = () => {
     try {
       setIsSyncWithShop(true)
       setSyncShopModal(true)
-
-      // apiRequest.get('/shops/sync-products-all').then((res) => {
-      //   handleShowToast('Sync sản phẩm thành công!')
-      //   window.location.reload()
-      // })
     } catch (error) {
       console.log(error)
     }

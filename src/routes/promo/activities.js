@@ -229,6 +229,12 @@ const Acvitites = () => {
       const res = await apiRequest.get('/promos/json')
 
       setTotal(res.data.total)
+      if (res.data.total == 0) {
+        handleShowToast('Đang cập nhật dữ liệu...')
+        // fetch promos and refresh page
+        const res = await apiRequest.get('/shops/sync-initial-promos')
+        window.location.reload()
+      }
       setActivities(res.data.promos)
       setLoading(false)
     } catch (error) {

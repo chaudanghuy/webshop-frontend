@@ -62,6 +62,7 @@ const Orders = () => {
 
   const [noneFilterOrders, setNoneFilterOrders] = useState([])
   const [orders, setOrders] = useState([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState('dateCreated')
   const [filterSearch, setFilterSearch] = useState('')
@@ -175,15 +176,21 @@ const Orders = () => {
             : a.id - b.id,
       ),
     )
+    setTotal(filtered.length)
   }
 
   const fetchOrders = async () => {
     setLoading(true)
-    await apiRequest.get('/orders/tiktok/all-orders').then((res) => {
-      // console.log(res.data);
-      setOrders(res.data)
-      setNoneFilterOrders(res.data)
-    })
+    const res = await apiRequest.get('/orders/tiktok/all-orders')
+    setOrders(res.data)
+    if (res.data.length === 0) {
+      handleShowToast('Đang cập nhật dữ liệu...')
+      // fetch orders and refresh page
+      const res = await apiRequest.get('/shops/sync-initial-orders')
+      window.location.reload()
+    }
+    setTotal(res.data.length)
+    setNoneFilterOrders(res.data)
     setTimeout(() => {
       setLoading(false)
     }, 2000)
@@ -203,13 +210,6 @@ const Orders = () => {
     try {
       setIsSyncWithShop(true)
       setSyncShopModal(true)
-
-      // const res = await apiRequest.get('/shops/sync-orders-all')
-      // handleShowToast('Bắt đầu cập nhật đơn hàng!')
-      // if (res.data.message) {
-      //   handleShowToast('Cập nhật đơn hàng lên shop thành công!')
-      //   window.location.reload()
-      // }
     } catch (error) {
       console.log(error)
       handleShowToast('Đã có lỗi xảy ra. Xin vui lòng thử lại!')
@@ -258,6 +258,7 @@ const Orders = () => {
         handleShowToast(`Sync order của shop ${syncShop.name} thành công!`)
         toggleSyncShop()
         setOrders([])
+        setTotal(0)
         fetchOrders()
       })
     } catch (error) {
@@ -363,7 +364,7 @@ const Orders = () => {
       <CRow>
         <CCol sm={5}>
           <h4 id="traffic" className="card-title mb-0">
-            Đơn hàng ({orders.length})
+            Đơn hàng ({total})
             <CButton color="warning" className="ms-2 mb-2" onClick={() => syncOrders()}>
               <CIcon icon={cilReload} className="me-1" />
             </CButton>
