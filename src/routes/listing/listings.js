@@ -90,6 +90,7 @@ import UploadToShop from './uploadToShop'
 import { format } from 'timeago.js'
 import { ToastNoti } from '../../components/notification/ToastNoti'
 import { ListTree } from 'lucide-react'
+import ListingHistory from './listingHistory'
 
 const Listings = () => {
   // enum
@@ -216,7 +217,6 @@ const Listings = () => {
     const fetchListingsOnShops = async () => {
       try {
         const res = await apiRequest.get('/listings/listing-on-shops')
-        console.log(res.data)
         setListingOnShops(res.data)
       } catch (error) {
         console.log(error)
@@ -606,45 +606,13 @@ const Listings = () => {
                         <CButton color="warning" onClick={() => toggleItem(item.id)}>
                           <ListTree className="ms-2" /> Lịch sử
                         </CButton>
-                        <CCollapse visible={openItems[item.id]}>
-                          <CCard className="mt-2">
-                            <CCardBody>
-                              {listingOnShops.length > 0 ? (
-                                listingOnShops.map((los) =>
-                                  los.listingId === item.id ? (
-                                    <>
-                                      <div
-                                        key={los.id}
-                                        className="d-flex flex-row justify-content-between "
-                                      >
-                                        <div className="p-2">{los.shop.name}</div>
-                                        <div className="p-2">{format(los.createdAt)}</div>
-                                        <div className="p-2">
-                                          {los.status === 'FAILURE' ? (
-                                            <>
-                                              <CBadge color="danger">{los.status}</CBadge>
-                                              <CLink color="info" href="#" target="_blank">
-                                                <CIcon icon={cilReload} className="me-2" />
-                                              </CLink>
-                                            </>
-                                          ) : (
-                                            <CBadge color="warning">{los.status}</CBadge>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <hr />
-                                    </>
-                                  ) : null,
-                                )
-                              ) : (
-                                <>
-                                  <CSpinner color="primary" />
-                                  Loading..
-                                </>
-                              )}
-                            </CCardBody>
-                          </CCard>
-                        </CCollapse>
+                        <ListingHistory
+                          visible={openItems[item.id]}
+                          history={
+                            listingOnShops &&
+                            listingOnShops.filter((los) => los.listingId === item.id)
+                          }
+                        />
                       </CTableDataCell>
                       <CTableDataCell className="text-center d-none d-md-table-cell">
                         <CButton

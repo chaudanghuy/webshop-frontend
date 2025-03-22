@@ -234,6 +234,7 @@ const ChooseListings = ({ visible, setVisible, listings, selectedShops, selected
 
     const fetchWarehouses = async () => {
       try {
+        if (!selectedShops) return
         const firstShop = selectedShops[0]
         const res = await apiRequest.get(`/products/warehouse/${firstShop.id}`)
 
