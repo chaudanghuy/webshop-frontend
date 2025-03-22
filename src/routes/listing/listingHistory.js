@@ -1,4 +1,5 @@
 import {
+  CBadge,
   CButton,
   CModal,
   CModalBody,
@@ -7,6 +8,7 @@ import {
   CModalTitle,
   CTable,
   CTableBody,
+  CTableDataCell,
   CTableHead,
   CTableHeaderCell,
   CTableRow,
